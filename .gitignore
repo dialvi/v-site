@@ -14,3 +14,22 @@ coverage
 .env.local
 .env.production.local
 .env.development.local
+
+# Media: no se sube al repo (si es público, GitHub la deja a la vista)
+public/media/photos/*
+public/media/audio/*
+public/media/videos/*
+!public/media/**/.gitkeep
+*.mp4
+*.mov
+*.m4v
+*.webm
+*.m4a
+*.mp3
+*.wav
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.heic
+*.gif
