@@ -26,7 +26,7 @@ export function WorldNode({ x, y, label, kicker, glyph, visible, delay = 0, onOp
         onOpen();
       }}
       disabled={!visible}
-      className="absolute flex h-[210px] w-[210px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center text-center transition-opacity duration-700"
+      className="absolute flex h-[220px] w-[250px] -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center px-2 text-center transition-opacity duration-700"
       style={{
         left: x,
         top: y,
@@ -42,7 +42,7 @@ export function WorldNode({ x, y, label, kicker, glyph, visible, delay = 0, onOp
         </span>
       </span>
       <span className="text-[10px] uppercase tracking-[0.28em] text-gold/70">{kicker}</span>
-      <span className="mt-1 font-display text-[1.65rem] italic leading-none text-paper">{label}</span>
+      <span className="mt-1 max-w-[14ch] font-display text-[1.35rem] italic leading-[1.05] text-paper">{label}</span>
     </button>
   );
 }

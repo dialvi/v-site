@@ -1,33 +1,55 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useCamera } from '@/hooks/useCamera';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { haptic } from '@/lib/haptics';
-import { loadSave, writeSave } from '@/lib/storage';
+import { useUniverseState } from '@/state/UniverseState';
 import { Starfield } from '@/components/Starfield';
 import { Grain } from '@/components/Grain';
 import { HistoriaLayer } from '@/features/historia/HistoriaLayer';
 import { ListaLayer } from '@/features/lista/ListaLayer';
 import { ArchivoLayer } from '@/features/archivo/ArchivoLayer';
-import { FinaleLayer } from '@/features/finale/FinaleLayer';
+import { ConclusionLayer } from '@/features/conclusion/ConclusionLayer';
+import { InvestigacionLayer } from '@/features/investigacion/InvestigacionLayer';
+import { SecretosLayer } from '@/features/secretos/SecretosLayer';
+import { MapaLayer } from '@/features/mapa/MapaLayer';
 import { WorldNode } from '@/features/universe/WorldNode';
-import { nodes, viewFor, WORLD, type ViewId } from '@/features/universe/views';
+import {
+  constellationLines,
+  nodes,
+  sectionNodes,
+  viewFor,
+  WORLD,
+  type SectionId,
+  type ViewId,
+} from '@/features/universe/views';
+
+type Hop = { section: SectionId; focus?: string };
 
 function viewport() {
   return { w: window.innerWidth, h: window.innerHeight };
 }
 
+function hopLabel(section: SectionId) {
+  if (section === 'investigacion') return 'investigación';
+  if (section === 'conclusion') return 'conclusión';
+  return section;
+}
+
 export function Universe() {
   const reduced = usePrefersReducedMotion();
-  const save = useMemo(() => loadSave(), []);
-  const [view, setView] = useState<ViewId>(save.entered ? 'map' : 'intro');
-  const [layer, setLayer] = useState<Exclude<ViewId, 'intro' | 'map'> | null>(null);
-  const [entered, setEntered] = useState(save.entered);
-  const [unlockedFirst, setUnlockedFirst] = useState(save.unlockedFirst);
+  const { save, patch } = useUniverseState();
+  const [view, setView] = useState<ViewId>('intro');
+  const [layer, setLayer] = useState<SectionId | null>(null);
+  const [jumpFocus, setJumpFocus] = useState<string | undefined>();
+  const [stack, setStack] = useState<Hop[]>([]);
+  const [entered, setEntered] = useState(false);
   const [hint, setHint] = useState(false);
   const pinchOut = useRef(0);
-  const start = save.entered
-    ? viewFor('map', typeof window === 'undefined' ? 390 : window.innerWidth, typeof window === 'undefined' ? 844 : window.innerHeight)
-    : viewFor('intro', typeof window === 'undefined' ? 390 : window.innerWidth, typeof window === 'undefined' ? 844 : window.innerHeight);
+  const start = viewFor(
+    'intro',
+    typeof window === 'undefined' ? 390 : window.innerWidth,
+    typeof window === 'undefined' ? 844 : window.innerHeight,
+  );
   const { camera, flyTo, bind, minScale } = useCamera(start);
 
   useEffect(() => {
@@ -35,38 +57,79 @@ export function Universe() {
       const t = window.setTimeout(() => setHint(true), 1400);
       return () => window.clearTimeout(t);
     }
+    setHint(false);
   }, [entered]);
 
   const goMap = (duration = reduced ? 1 : 1200) => {
     const { w, h } = viewport();
+    setStack([]);
+    setJumpFocus(undefined);
     setLayer(null);
     setView('map');
     flyTo(viewFor('map', w, h), duration);
   };
 
+  const showSection = (next: SectionId, focus?: string, instant = false) => {
+    const { w, h } = viewport();
+    if (!save.seenSections.includes(next)) {
+      void patch({ seenSections: [...save.seenSections, next] });
+    }
+    setJumpFocus(focus);
+    setView(next);
+    if (instant) {
+      setLayer(next);
+      flyTo(viewFor(next, w, h), reduced ? 1 : 700);
+      return;
+    }
+    flyTo(viewFor(next, w, h), reduced ? 1 : 900, () => setLayer(next));
+  };
+
   const enter = () => {
     const { w, h } = viewport();
     haptic('medium');
-    writeSave({ entered: true });
     setEntered(true);
     flyTo(viewFor('map', w, h), reduced ? 1 : 1400, () => {
       setView('map');
     });
   };
 
-  const open = (next: Exclude<ViewId, 'intro' | 'map'>) => {
-    const { w, h } = viewport();
+  const goIntro = () => {
+    if (!entered || layer) return;
     haptic('medium');
-    const seen = loadSave().seenSections;
-    if (!seen.includes(next)) writeSave({ seenSections: [...seen, next] });
-    setView(next);
-    flyTo(viewFor(next, w, h), reduced ? 1 : 900, () => setLayer(next));
+    setStack([]);
+    setJumpFocus(undefined);
+    setLayer(null);
+    setEntered(false);
+    setView('intro');
+    const { w, h } = viewport();
+    flyTo(viewFor('intro', w, h), reduced ? 1 : 1100);
+  };
+
+  const open = (next: SectionId, focus?: string) => {
+    haptic('medium');
+    setStack([]);
+    showSection(next, focus);
+  };
+
+  const jump = (next: SectionId, focus: string | undefined, from: Hop) => {
+    haptic('medium');
+    setStack((s) => [...s, from]);
+    showSection(next, focus, true);
   };
 
   const backFromLayer = () => {
     haptic('light');
+    const prev = stack[stack.length - 1];
+    if (prev) {
+      setStack((s) => s.slice(0, -1));
+      showSection(prev.section, prev.focus, true);
+      return;
+    }
     goMap();
   };
+
+  const returnTo = stack[stack.length - 1];
+  const backLabel = returnTo ? hopLabel(returnTo.section) : 'universo';
 
   const worldStyle = {
     width: WORLD.width,
@@ -108,78 +171,68 @@ export function Universe() {
         >
           <div className="relative" style={worldStyle}>
             <Constellation entered={entered} />
-            <TitleMark />
-            <WorldNode
-              x={nodes.historia.x}
-              y={nodes.historia.y}
-              kicker="01"
-              label="Historia"
-              glyph="✦"
-              visible={entered}
-              delay={120}
-              onOpen={() => open('historia')}
-            />
-            <WorldNode
-              x={nodes.archivo.x}
-              y={nodes.archivo.y}
-              kicker="archivo"
-              label="Archivo"
-              glyph="◎"
-              visible={entered}
-              delay={260}
-              onOpen={() => open('archivo')}
-            />
-            <WorldNode
-              x={nodes.lista.x}
-              y={nodes.lista.y}
-              kicker="128"
-              label="La lista"
-              glyph="⌘"
-              visible={entered}
-              delay={400}
-              onOpen={() => open('lista')}
-            />
+            <TitleMark entered={entered} onOpenIntro={goIntro} />
+            {sectionNodes.map((node) => (
+              <WorldNode
+                key={node.id}
+                x={node.x}
+                y={node.y}
+                kicker={node.kicker}
+                label={node.label}
+                glyph={node.glyph}
+                visible={entered}
+                delay={node.delay}
+                onOpen={() => open(node.id)}
+              />
+            ))}
           </div>
         </div>
       </div>
 
       {!entered && <IntroHud onEnter={enter} />}
 
-      {entered && !layer && view !== 'intro' && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 safe-pad flex flex-col items-center gap-3">
-          {hint && (
-            <p className="text-center text-[11px] uppercase tracking-[0.22em] text-paper/40 animate-fade-in">
-              pellizca · arrastra · toca
-            </p>
-          )}
-          <button
-            type="button"
-            className="pointer-events-auto text-[11px] uppercase tracking-[0.22em] text-gold/70"
-            onClick={() => {
-              haptic('light');
-              open('finale');
-            }}
-          >
-            esto es solo el comienzo
-          </button>
+      {entered && !layer && view !== 'intro' && hint && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 safe-pad flex flex-col items-center">
+          <p className="text-center text-[11px] uppercase tracking-[0.22em] text-paper/40 animate-fade-in">
+            pellizca · arrastra · toca
+          </p>
         </div>
       )}
 
-      {layer === 'historia' && <HistoriaLayer onBack={backFromLayer} />}
-      {layer === 'lista' && (
-        <ListaLayer
+      {layer === 'historia' && (
+        <HistoriaLayer
           onBack={backFromLayer}
-          onFirstUnlock={() => setUnlockedFirst(true)}
+          backLabel={backLabel}
+          focusId={jumpFocus}
+          onOpenMap={(placeId, storyFocus) =>
+            jump('mapa', placeId, { section: 'historia', focus: storyFocus })
+          }
         />
       )}
+      {layer === 'lista' && <ListaLayer onBack={backFromLayer} />}
       {layer === 'archivo' && <ArchivoLayer onBack={backFromLayer} />}
-      {layer === 'finale' && (
-        <FinaleLayer
-          alreadyUnlocked={unlockedFirst}
+      {layer === 'investigacion' && (
+        <InvestigacionLayer onBack={backFromLayer} backLabel={backLabel} focusId={jumpFocus} />
+      )}
+      {layer === 'secretos' && <SecretosLayer onBack={backFromLayer} />}
+      {layer === 'mapa' && (
+        <MapaLayer
           onBack={backFromLayer}
+          backLabel={backLabel}
+          focusId={jumpFocus}
+          onJump={(link, placeId) =>
+            jump(link.section, link.focus, { section: 'mapa', focus: placeId })
+          }
+        />
+      )}
+      {layer === 'conclusion' && (
+        <ConclusionLayer
+          alreadyUnlocked={save.unlockedFirst}
+          onBack={backFromLayer}
+          backLabel={backLabel}
           onUnlock={() => {
-            setUnlockedFirst(true);
-            writeSave({ unlockedFirst: true });
+            void patch({ unlockedFirst: true });
+            setStack([]);
             const { w, h } = viewport();
             setLayer('lista');
             setView('lista');
@@ -188,30 +241,60 @@ export function Universe() {
         />
       )}
 
-      <Grain />
+      {layer !== 'mapa' && <Grain />}
     </div>
   );
 }
 
-function TitleMark() {
+function TitleMark({ entered, onOpenIntro }: { entered: boolean; onOpenIntro: () => void }) {
+  const origin = useRef<{ x: number; y: number } | null>(null);
+
   return (
     <div
       className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
-      style={{ left: nodes.title.x, top: nodes.title.y }}
+      style={{
+        left: nodes.title.x,
+        top: nodes.title.y,
+        width: entered ? undefined : 280,
+        pointerEvents: entered ? 'auto' : 'none',
+      }}
+      onPointerDown={
+        entered
+          ? (e) => {
+              origin.current = { x: e.clientX, y: e.clientY };
+            }
+          : undefined
+      }
+      onClick={
+        entered
+          ? (e) => {
+              const o = origin.current;
+              if (o && Math.hypot(e.clientX - o.x, e.clientY - o.y) > 12) return;
+              onOpenIntro();
+            }
+          : undefined
+      }
     >
-      <p className="font-display text-[4.6rem] italic leading-none text-paper">Valeria</p>
+      {entered ? (
+        <p className="whitespace-nowrap px-[0.45em] font-display text-[2.65rem] italic leading-none text-paper">
+          Valeria 😊
+        </p>
+      ) : (
+        <>
+          <p className="font-display text-[2.05rem] italic leading-[1.05] text-paper">Para Valeria</p>
+          <p className="mt-2 font-display text-[1.15rem] italic leading-snug text-paper/80">por tu cumpleaños</p>
+          <p className="mt-3 text-[13px] leading-snug text-paper/55">
+            Que sigas disfrutando.
+            <br />
+            Y que recuerdes los detalles pequeños.
+          </p>
+        </>
+      )}
     </div>
   );
 }
 
 function Constellation({ entered }: { entered: boolean }) {
-  const pts = [
-    [nodes.historia.x, nodes.historia.y],
-    [nodes.archivo.x, nodes.archivo.y],
-    [nodes.lista.x, nodes.lista.y],
-    [nodes.historia.x, nodes.historia.y],
-  ];
-  const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]},${p[1]}`).join(' ');
   return (
     <svg
       className="pointer-events-none absolute inset-0"
@@ -219,17 +302,19 @@ function Constellation({ entered }: { entered: boolean }) {
       height={WORLD.height}
       viewBox={`0 0 ${WORLD.width} ${WORLD.height}`}
     >
-      <path
-        d={d}
-        fill="none"
-        stroke="rgba(232,184,109,0.22)"
-        strokeWidth="1.2"
-        strokeDasharray="4 10"
-        style={{
-          opacity: entered ? 1 : 0,
-          transition: 'opacity 1.2s ease',
-        }}
-      />
+      {constellationLines.map(([a, b]) => (
+        <line
+          key={`${a}-${b}`}
+          x1={nodes[a].x}
+          y1={nodes[a].y}
+          x2={nodes[b].x}
+          y2={nodes[b].y}
+          stroke="rgba(232,184,109,0.42)"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          style={{ opacity: entered ? 1 : 0, transition: 'opacity 1.2s ease' }}
+        />
+      ))}
     </svg>
   );
 }
@@ -237,16 +322,19 @@ function Constellation({ entered }: { entered: boolean }) {
 function IntroHud({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-end safe-pad">
-      <div className="mb-[18vh] flex flex-col items-center text-center animate-slide-up">
-        <p className="max-w-[18ch] text-[15px] leading-relaxed text-paper/60">
-          Tu regalo tiene varias partes.
+      <div className="mb-[10vh] flex flex-col items-center text-center animate-slide-up">
+        <p className="max-w-[28ch] text-[15px] leading-relaxed text-paper/70">
+          Me dijiste que te gustaba la astronomía.
+        </p>
+        <p className="mt-4 max-w-[30ch] text-[15px] leading-relaxed text-paper/55">
+          Mi regalo es un poco extraño, pero te servirá para recordar y explorar tu universo de experiencias.
         </p>
         <button
           type="button"
           onClick={onEnter}
           className="pointer-events-auto mt-8 text-[13px] uppercase tracking-[0.32em] text-gold"
         >
-          Entrar →
+          Explorar mi universo →
         </button>
       </div>
     </div>

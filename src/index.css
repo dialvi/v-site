@@ -55,6 +55,20 @@
     padding-right: calc(var(--safe-right) + 1.25rem);
   }
 
+  .scroll-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
   .scroll-y {
     overflow-y: auto;
     overflow-x: hidden;
@@ -63,8 +77,224 @@
     overscroll-behavior: contain;
   }
 
+  .historia-x {
+    overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    scrollbar-width: none;
+  }
+
+  .historia-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  .historia-y {
+    overflow-y: auto;
+    overflow-x: hidden;
+    touch-action: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    scrollbar-width: none;
+  }
+
+  .historia-y::-webkit-scrollbar {
+    display: none;
+  }
+
   .selectable {
     user-select: text;
     -webkit-user-select: text;
+  }
+}
+
+.sat-map {
+  background: #1a1814;
+  font: inherit;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+.sat-map .leaflet-container,
+.sat-map.leaflet-container {
+  background: #1a1814;
+}
+
+.sat-map .leaflet-control-attribution {
+  background: rgba(12, 11, 10, 0.55);
+  color: rgba(243, 234, 216, 0.4);
+  font-size: 9px;
+  max-width: 70%;
+}
+
+.v-pin {
+  background: transparent;
+  border: none;
+}
+
+.v-pin i {
+  display: block;
+  width: 14px;
+  height: 14px;
+  margin: 4px;
+  border-radius: 999px;
+  background: #e23a32;
+  box-shadow: 0 0 16px rgba(226, 58, 50, 0.85);
+}
+
+.v-pin-on i {
+  width: 18px;
+  height: 18px;
+  margin: 5px;
+  background: #ff4d44;
+  box-shadow: 0 0 20px rgba(255, 77, 68, 1);
+}
+
+.sky-star {
+  position: absolute;
+  border-radius: 999px;
+  background: #f3ead8;
+  animation: sky-twinkle ease-in-out infinite;
+}
+
+.sky-orbit-host {
+  position: absolute;
+  translate: -50% -50%;
+  scale: 1 var(--squash, 0.5);
+}
+
+.sky-orbit-spin {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  animation: sky-spin linear infinite;
+}
+
+.sky-planet-wrap {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  display: grid;
+  place-items: center;
+  translate: -50% -50%;
+  scale: 1 calc(1 / var(--squash, 0.5));
+  animation: sky-spin-rev linear infinite;
+}
+
+.sky-planet {
+  display: block;
+  border-radius: 999px;
+  opacity: 0.78;
+}
+
+.sky-moon {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 46px;
+}
+
+.sky-moon-glow {
+  position: absolute;
+  inset: -18px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(243, 234, 216, 0.28) 0%, rgba(243, 234, 216, 0.08) 42%, transparent 70%);
+}
+
+.sky-moon-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 30%, #fff8ea 0%, #f3ead8 34%, #c9b89a 72%, #7a7064 100%);
+  box-shadow:
+    inset -10px -6px 12px rgba(40, 32, 24, 0.42),
+    0 0 22px rgba(243, 234, 216, 0.38);
+}
+
+.sky-crater {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(90, 78, 64, 0.22);
+  box-shadow: inset 1px 1px 2px rgba(40, 32, 24, 0.25);
+}
+
+.sky-crater-a {
+  width: 11px;
+  height: 11px;
+  left: 11px;
+  top: 13px;
+}
+
+.sky-crater-b {
+  width: 7px;
+  height: 7px;
+  right: 10px;
+  top: 9px;
+}
+
+.sky-crater-c {
+  width: 5px;
+  height: 5px;
+  left: 16px;
+  bottom: 10px;
+}
+
+.sky-ring {
+  position: absolute;
+  width: 230%;
+  height: 52%;
+  border: 1.4px solid rgba(232, 184, 109, 0.42);
+  border-radius: 50%;
+  rotate: -22deg;
+  pointer-events: none;
+}
+
+.sky-shoot {
+  position: absolute;
+  height: 1.4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(243, 234, 216, 0.15), #f3ead8, transparent);
+  transform-origin: left center;
+  opacity: 0;
+  animation: sky-shoot ease-in infinite;
+}
+
+@keyframes sky-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes sky-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sky-spin-rev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes sky-shoot {
+  0%,
+  82% {
+    opacity: 0;
+    transform: rotate(-32deg) translateX(0);
+  }
+  86% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-32deg) translateX(58vw);
   }
 }

@@ -17,7 +17,7 @@ type Fly = {
 
 type Pointer = { id: number; x: number; y: number };
 
-const MIN_SCALE = 0.55;
+const MIN_SCALE = 0.24;
 const MAX_SCALE = 3.4;
 
 function distance(a: Pointer, b: Pointer) {

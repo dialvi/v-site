@@ -2,21 +2,21 @@ import { useState } from 'react';
 import { archiveIntro, archivePieces, type ArchivePiece } from '@/content/archive';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
-import { loadSave, writeSave } from '@/lib/storage';
+import { useUniverseState } from '@/state/UniverseState';
 
 type Props = {
   onBack: () => void;
 };
 
 export function ArchivoLayer({ onBack }: Props) {
+  const { save, patch } = useUniverseState();
   const [open, setOpen] = useState<number | null>(null);
   const piece = archivePieces.find((p) => p.id === open);
 
   const openPiece = (id: number) => {
     haptic('medium');
-    const save = loadSave();
     if (!save.openedArchive.includes(id)) {
-      writeSave({ openedArchive: [...save.openedArchive, id] });
+      void patch({ openedArchive: [...save.openedArchive, id] });
     }
     setOpen(id);
   };

@@ -1,224 +1,77 @@
-export type PlanCategory =
-  | 'aventura'
-  | 'secreto'
-  | 'comida'
-  | 'naturaleza'
-  | 'absurdo'
-  | 'excursion'
-  | 'romantico'
-  | 'sorpresa';
-
 export type Plan = {
-  id: number;
   title: string;
-  teaser: string;
+  emoji: string;
   body: string;
-  category: PlanCategory;
-  prep?: string;
 };
 
-export type WeekOffer = {
-  week: number;
-  prompt: string;
-  options: [
-    { label: string; emoji: string; planId: number },
-    { label: string; emoji: string; planId: number },
-  ];
+export type Slot = {
+  id: number;
+  done?: Plan;
+  options?: [Plan, Plan];
 };
 
-export const TOTAL_PLANS = 128;
-export const TOTAL_WEEKS = 64;
+/** 24 casillas: una cada dos semanas, durante un año. */
+export const TOTAL_SLOTS = 24;
 
-/** El día que ella abre el regalo. A partir de aquí, una semana = un desbloqueo. */
+/** A partir de aquí se abre una casilla nueva cada 14 días. Las 5 primeras ya están disfrutadas. */
 export const UNLOCK_START = new Date('2026-09-21T00:00:00+02:00');
+const FORTNIGHT_MS = 14 * 24 * 60 * 60 * 1000;
+const PAST_DONE = 5;
 
-const authored: Plan[] = [
+export const slots: Slot[] = [
   {
     id: 1,
-    title: 'BolArque',
-    teaser: 'Canoa entre barrancos.',
-    body: 'Canoa entre barrancos.\nUna cala escondida.\nPesca.\nCocinar lo que pesquemos.\nY alguna cosa que no te voy a contar todavía.',
-    category: 'aventura',
-    prep: 'Preparación: 100% Diego.',
+    done: {
+      title: 'La Bola del Mundo',
+      emoji: '⛰️',
+      body: 'El Hike. Jeep levantando polvo, machete, llamada a tu madre y cero cobertura.\n\nBarranca, casi al río, picnic de manguitos, quince minutos de piedras, cabras, el arbolito, el Cachibache, nieve y atardecer en las antenas.\n\nBajamos de noche, con destellos de tormenta y una mini explosión que era el cargador. Fue el primer plan de verdad.',
+    },
   },
   {
     id: 2,
-    title: 'El sitio que no está en el mapa',
-    teaser: 'Una puerta que no parece una puerta.',
-    body: 'Hay un sitio en Madrid que no se busca: se llega. Comida que no pide foto. Una mesa que parece habernos estado esperando. El resto, cuando estemos ahí.',
-    category: 'secreto',
-    prep: 'Yo reservo. Tú solo ven.',
+    done: {
+      title: 'Pantano de San Juan',
+      emoji: '⛵',
+      body: 'Taller de fabricación de barcos, expedición por el pantano y esa playita VIP de Madrid. El barquito quedó increíble.\n\nSubimos el jeep a unas piedras, vimos el atardecer en el techo del coche y, por fin, torreznos decentes al atardecer.',
+    },
   },
   {
     id: 3,
-    title: 'Torreznos 2.0',
-    teaser: 'Misma idea. Mejor ejecución.',
-    body: 'Volver al espíritu del primer plan, no al mismo sitio. Caminar hasta merecerlo. Comer como si no hubiera que fingir nada.',
-    category: 'comida',
+    done: {
+      title: 'Tour Madrid norte v1',
+      emoji: '🐐',
+      body: 'Cabras. Jarritos. Un ataque de tos horrible. Y cenita de horicios en el asturiano.\n\nMadrid norte, primera versión. Ya hay material para la v2.',
+    },
   },
   {
     id: 4,
-    title: 'Noche de cabras',
-    teaser: 'La coña, pero en el mundo real.',
-    body: 'Un recorrido absurdo por la ciudad con reglas que solo entendemos nosotros. Si alguien pregunta qué hacemos, peor.',
-    category: 'absurdo',
+    done: {
+      title: 'Mexicana y rooftop',
+      emoji: '🌮',
+      body: 'Comida mexicana rica rica que no te convenció del todo, pero ganaste la apuesta: el camarero no era mexicano.\n\nLuego rooftop por Madrid, el ático de mi torre, y un vídeo espectacular. Sin tabla de quesos. Esa sigue pendiente.',
+    },
   },
   {
     id: 5,
-    title: 'El río que no es el de siempre',
-    teaser: 'Agua, piedra, silencio a ratos.',
-    body: 'Salir de la ciudad sin convertir el día en una expedición. Un tramo de agua. Piedras. El tipo de cansancio bueno.',
-    category: 'naturaleza',
+    done: {
+      title: 'La fiesta mexicana (intento 1)',
+      emoji: '🇲🇽',
+      body: 'Intento fallido de fiesta mexicana.\n\nNo salió. Pasa. La volveré a intentar.',
+    },
   },
-  {
-    id: 6,
-    title: 'Mercado + lo que salga',
-    teaser: 'Comprar sin lista. Cocinar sin plan B.',
-    body: 'Entramos, miramos, elegimos lo que pida el día. Luego cocina. Si sale regular, también cuenta.',
-    category: 'comida',
-  },
-  {
-    id: 7,
-    title: 'El tren de las 8:12',
-    teaser: 'Un pueblo al azar. Un día entero.',
-    body: 'Coger un tren concreto. Bajarnos donde toque. Comer donde coman ellos. Volver cuando se acabe la luz.',
-    category: 'excursion',
-  },
-  {
-    id: 8,
-    title: 'La mesa pequeña',
-    teaser: 'Una cena. Pocas luces. Sin discurso.',
-    body: 'No es una declaración. Es una mesa, dos platos y el tiempo que haga falta. El resto, si sale, sale.',
-    category: 'romantico',
-  },
-  {
-    id: 9,
-    title: 'Atardecer no turístico',
-    teaser: 'Un sitio alto que no sale en Instagram.',
-    body: 'Subir, esperar, bajar. Sin itinerario. Si hace frío, mejor.',
-    category: 'naturaleza',
-  },
-  {
-    id: 10,
-    title: 'Misión queso (revancha)',
-    teaser: 'Esta vez sí llega.',
-    body: 'La tabla que no llegó, pero hecha de verdad. Con los quesos que merecen el nombre. Y sin avisar del postre.',
-    category: 'sorpresa',
-  },
-  {
-    id: 11,
-    title: 'Cazar un concierto imposible',
-    teaser: 'Entrar tarde. Salir cuando toque.',
-    body: 'No es ir a ver a alguien famoso. Es tropezar con música que no habíamos buscado y quedarnos de más.',
-    category: 'absurdo',
-  },
-  {
-    id: 12,
-    title: 'El plan que no te voy a decir',
-    teaser: 'De verdad. Ni una pista.',
-    body: 'Solo una hora, una prenda concreta y la instrucción de no preguntar. El resto es parte del plan.',
-    category: 'sorpresa',
-  },
-  {
-    id: 13,
-    title: 'Barranco de andar',
-    teaser: 'Sin canoa. Con más silencio.',
-    body: 'Un sendero estrecho, sombra, y la conversación que solo aparece en el kilómetro que no se mide.',
-    category: 'aventura',
-  },
-  {
-    id: 14,
-    title: 'Cocinar para nadie más',
-    teaser: 'Una receta larga. Sin prisa.',
-    body: 'Elegimos una cosa que tarde. Ponemos música. El resultado importa menos que el rato.',
-    category: 'comida',
-  },
-  {
-    id: 15,
-    title: 'Pueblo con nombre raro',
-    teaser: 'Elegido por cómo suena.',
-    body: 'El criterio es el nombre. El resto se improvisa: bar, iglesia, banco al sol, lo que haya.',
-    category: 'excursion',
-  },
-  {
-    id: 16,
-    title: 'Nada, a propósito',
-    teaser: 'Cero itinerario. Cero fotos obligatorias.',
-    body: 'Un día cuyo único plan es no tenerlo. Si nos aburrimos, también es información.',
-    category: 'secreto',
-  },
+  ...Array.from({ length: TOTAL_SLOTS - PAST_DONE }, (_, i) => ({ id: i + 1 + PAST_DONE })),
 ];
 
-const leftoverCategories: PlanCategory[] = [
-  'aventura',
-  'comida',
-  'naturaleza',
-  'absurdo',
-  'excursion',
-  'sorpresa',
-  'romantico',
-  'secreto',
-];
-
-export const plans: Plan[] = Array.from({ length: TOTAL_PLANS }, (_, i) => {
-  const authoredPlan = authored.find((p) => p.id === i + 1);
-  if (authoredPlan) return authoredPlan;
-  return {
-    id: i + 1,
-    title: 'Todavía no tiene nombre',
-    teaser: 'Existe. Todavía no te lo cuento.',
-    body: 'Hay planes que no se escriben hasta que les llega su semana. Este es uno de esos.',
-    category: leftoverCategories[i % leftoverCategories.length],
-  };
-});
-
-export const weeks: WeekOffer[] = Array.from({ length: TOTAL_WEEKS }, (_, i) => {
-  const a = i * 2 + 1;
-  const b = i * 2 + 2;
-  const planA = plans[a - 1];
-  const planB = plans[b - 1];
-  const labels: Record<PlanCategory, { label: string; emoji: string }> = {
-    aventura: { label: 'Aventura', emoji: '🏕️' },
-    secreto: { label: 'Plan secreto', emoji: '🍷' },
-    comida: { label: 'Comida', emoji: '🍽️' },
-    naturaleza: { label: 'Naturaleza', emoji: '🌿' },
-    absurdo: { label: 'Algo absurdo', emoji: '🐐' },
-    excursion: { label: 'Excursión', emoji: '🚂' },
-    romantico: { label: 'Sin prisa', emoji: '🕯️' },
-    sorpresa: { label: 'Sorpresa', emoji: '🎁' },
-  };
-
-  if (i === 0) {
-    return {
-      week: 1,
-      prompt: '¿Qué te apetece?',
-      options: [
-        { label: 'Aventura', emoji: '🏕️', planId: 1 },
-        { label: 'Plan secreto', emoji: '🍷', planId: 2 },
-      ],
-    };
-  }
-
-  return {
-    week: i + 1,
-    prompt: '¿Qué te apetece?',
-    options: [
-      { ...labels[planA.category], planId: planA.id },
-      { ...labels[planB.category], planId: planB.id },
-    ],
-  };
-});
-
-export function planById(id: number) {
-  return plans[id - 1];
+export function slotById(id: number) {
+  return slots.find((s) => s.id === id);
 }
 
-export function currentWeek(now = new Date()) {
+export function currentUnlock(now = new Date()) {
   const delta = now.getTime() - UNLOCK_START.getTime();
-  if (delta < 0) return 1;
-  return Math.min(TOTAL_WEEKS, Math.floor(delta / (7 * 24 * 60 * 60 * 1000)) + 1);
+  if (delta < 0) return PAST_DONE;
+  return Math.min(TOTAL_SLOTS, PAST_DONE + Math.floor(delta / FORTNIGHT_MS) + 1);
 }
 
-export function isWeekOpen(week: number, now = new Date()) {
-  return week <= currentWeek(now);
+export function isSlotOpen(id: number, now = new Date()) {
+  return id <= currentUnlock(now);
 }
