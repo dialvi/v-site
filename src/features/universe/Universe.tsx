@@ -255,7 +255,7 @@ function TitleMark({ entered, onOpenIntro }: { entered: boolean; onOpenIntro: ()
       style={{
         left: nodes.title.x,
         top: nodes.title.y,
-        width: entered ? undefined : 280,
+        width: entered ? undefined : 300,
         pointerEvents: entered ? 'auto' : 'none',
       }}
       onPointerDown={
@@ -281,13 +281,13 @@ function TitleMark({ entered, onOpenIntro }: { entered: boolean; onOpenIntro: ()
         </p>
       ) : (
         <>
-          <p className="font-display text-[2.05rem] italic leading-[1.05] text-paper">Para Valeria</p>
-          <p className="mt-2 font-display text-[1.15rem] italic leading-snug text-paper/80">por tu cumpleaños</p>
-          <p className="mt-3 text-[13px] leading-snug text-paper/55">
-            Que sigas disfrutando.
-            <br />
-            Y que recuerdes los detalles pequeños.
+          <p className="font-display italic leading-none text-paper">
+            <span className="text-[1.35rem]">Para </span>
+            <span className="text-[2.55rem]">Valeria</span>
           </p>
+          <p className="mt-2 font-display text-[1.25rem] italic leading-snug text-paper/75">de Diego...</p>
+          <p className="mt-5 font-display text-[1.15rem] italic leading-snug text-paper/70">por tu cumpleaños</p>
+          <p className="mt-1 text-[14px] leading-snug text-paper/55">para que sigas disfrutando la vida</p>
         </>
       )}
     </div>
