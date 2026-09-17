@@ -75,13 +75,31 @@ function loadGis() {
   return gisReady;
 }
 
+function cleanEnv(raw?: string) {
+  return (raw ?? '')
+    .trim()
+    .replace(/\r/g, '')
+    .replace(/^['"]+|['"]+$/g, '')
+    .trim();
+}
+
+function normalizeEmail(value: string) {
+  return cleanEnv(value).toLowerCase().replace(/@googlemail\.com$/, '@gmail.com');
+}
+
+function folderIdFromEnv(raw?: string) {
+  const value = cleanEnv(raw);
+  const fromUrl = value.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return fromUrl?.[1] ?? value;
+}
+
 export function archiveConfig() {
   return {
-    clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '',
-    folderId: import.meta.env.VITE_DRIVE_FOLDER_ID?.trim() ?? '',
-    allow: (import.meta.env.VITE_ARCHIVE_EMAILS ?? '')
-      .split(',')
-      .map((s) => s.trim().toLowerCase())
+    clientId: cleanEnv(import.meta.env.VITE_GOOGLE_CLIENT_ID),
+    folderId: folderIdFromEnv(import.meta.env.VITE_DRIVE_FOLDER_ID),
+    allow: cleanEnv(import.meta.env.VITE_ARCHIVE_EMAILS)
+      .split(/[,;\n]+/)
+      .map(normalizeEmail)
       .filter(Boolean),
   };
 }
@@ -162,13 +180,13 @@ export async function signInToGoogle(opts?: { silent?: boolean; hint?: string })
   });
   if (!profileRes.ok) throw new Error('profile');
   const profile = (await profileRes.json()) as { email?: string };
-  const email = profile.email?.toLowerCase() ?? '';
+  const email = normalizeEmail(profile.email ?? '');
   if (!email) throw new Error('profile');
 
   const { allow } = archiveConfig();
   if (allow.length > 0 && !allow.includes(email)) {
     signOutGoogle(accessToken);
-    throw new Error('forbidden');
+    throw new Error('forbidden-email');
   }
 
   return { accessToken, email };
@@ -222,7 +240,8 @@ function thumbUrl(link?: string, fileId?: string) {
 async function driveGet<T>(accessToken: string, url: string) {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (res.status === 401) throw new Error('expired');
-  if (res.status === 403 || res.status === 404) throw new Error('forbidden');
+  if (res.status === 404) throw new Error('missing-folder');
+  if (res.status === 403) throw new Error('forbidden-folder');
   if (!res.ok) throw new Error('drive');
   return (await res.json()) as T;
 }
@@ -298,7 +317,8 @@ export async function fetchDriveFile(accessToken: string, fileId: string) {
   const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true&acknowledgeAbuse=true`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
   if (res.status === 401) throw new Error('expired');
-  if (res.status === 403 || res.status === 404) throw new Error('forbidden');
+  if (res.status === 404) throw new Error('missing-folder');
+  if (res.status === 403) throw new Error('forbidden-folder');
   if (!res.ok) throw new Error('drive');
   const blob = await res.blob();
   if (!blob.size) throw new Error('drive');

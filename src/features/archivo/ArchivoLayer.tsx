@@ -275,7 +275,13 @@ function MediaThumb({ item }: { item: DriveMedia }) {
 }
 
 function messageFor(code: string) {
-  if (code === 'forbidden') return 'Esta cuenta no tiene acceso. Tiene que ser la que está en la carpeta.';
+  if (code === 'forbidden-email') {
+    return 'Has entrado con una cuenta que no está en la lista. En Google elige la misma Gmail que en el PC.';
+  }
+  if (code === 'forbidden-folder' || code === 'forbidden') {
+    return 'Google no deja leer la carpeta con esa cuenta. Compártela en Drive como lectora.';
+  }
+  if (code === 'missing-folder') return 'No se encuentra la carpeta. Revisa el ID en los secrets.';
   if (code === 'denied') return 'No se completó el acceso.';
   if (code === 'expired') return 'La sesión se ha caducado. Entra otra vez.';
   return 'No se han podido abrir los recuerdos.';
