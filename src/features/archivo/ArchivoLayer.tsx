@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
 import {
@@ -19,6 +20,8 @@ type Props = {
   onBack: () => void;
 };
 
+const TILTS = [-2.6, 1.8, -1.2, 2.4, 0.6, -2.1, 1.5, -0.8];
+
 export function ArchivoLayer({ onBack }: Props) {
   useEffect(() => {
     pingArchivoEnter();
@@ -31,13 +34,13 @@ export function ArchivoLayer({ onBack }: Props) {
   };
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-ink/88 backdrop-blur-md animate-depth-in">
-      <header className="safe-pad flex items-center justify-between pb-2">
+    <div className="album-page z-20 animate-depth-in">
+      <header className="relative z-[1] flex shrink-0 items-center justify-between px-5 pb-2 pt-[calc(var(--safe-top)+1rem)]">
         <BackChip onClick={leave} label="universo" />
-        <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">Archivo</p>
+        <p className="font-display text-[15px] italic text-paper/70">el álbum</p>
       </header>
 
-      <div className="scroll-y flex-1 px-6 pb-[calc(var(--safe-bottom)+2.5rem)]">
+      <div className="album-sheet px-6 pb-[calc(var(--safe-bottom)+3rem)]">
         <DriveVault />
       </div>
     </div>
@@ -142,11 +145,12 @@ function DriveVault() {
 
   return (
     <section>
-      <p className="mb-6 font-display text-[1.45rem] italic leading-tight text-paper/80">
+      <p className="mb-1 font-display text-[1.55rem] italic leading-tight text-paper/85">
         Para que los recuerdos no llenen tu iCloud
       </p>
+      <p className="mb-7 font-display text-[13px] italic text-dust/75">pegadas aquí, una al lado de la otra</p>
       {!configured && (
-        <p className="rounded-2xl border border-paper/10 px-4 py-4 text-[14px] leading-relaxed text-paper/45">
+        <p className="rounded-sm border border-dashed border-paper/20 bg-paper/5 px-4 py-4 text-[14px] leading-relaxed text-paper/55">
           Aún no está conectado. Falta el acceso de Google.
         </p>
       )}
@@ -156,25 +160,25 @@ function DriveVault() {
           type="button"
           disabled={busy}
           onClick={() => void enter()}
-          className="w-full rounded-full border border-gold/40 bg-gold/10 py-3.5 text-[12px] uppercase tracking-[0.2em] text-gold disabled:opacity-50"
+          className="album-label disabled:opacity-50"
         >
-          {busy ? 'Abriendo Google…' : 'Entrar con Google'}
+          {busy ? 'Abriendo Google…' : 'Abrir el álbum'}
         </button>
       )}
 
       {(busy || restoring) && !email && (
-        <p className="text-[13px] text-paper/40">Recuperando la sesión…</p>
+        <p className="font-display text-[14px] italic text-paper/45">Buscando las fotos…</p>
       )}
 
       {email && (
         <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 truncate text-[12px] text-paper/45">{email}</p>
+          <p className="min-w-0 truncate text-[12px] text-paper/40">{email}</p>
           <button
             type="button"
             onClick={leave}
-            className="shrink-0 text-[11px] uppercase tracking-[0.18em] text-paper/50"
+            className="shrink-0 font-display text-[12px] italic text-paper/50"
           >
-            salir
+            cerrar álbum
           </button>
         </div>
       )}
@@ -182,13 +186,13 @@ function DriveVault() {
       {error && <p className="mt-5 text-[14px] leading-relaxed text-dust">{error}</p>}
 
       {email && !error && items.length === 0 && !busy && (
-        <p className="mt-5 text-[14px] leading-relaxed text-paper/45">No hay nada en la carpeta.</p>
+        <p className="mt-5 font-display text-[15px] italic text-paper/50">Este álbum todavía está vacío.</p>
       )}
 
       {items.length > 0 && (
-        <ul className="mt-5 grid grid-cols-4 gap-1">
-          {items.map((item) => (
-            <li key={item.id}>
+        <ul className="mt-6 grid grid-cols-2 gap-x-5 gap-y-8 px-2 pt-3">
+          {items.map((item, i) => (
+            <li key={item.id} className="overflow-visible">
               <button
                 type="button"
                 onClick={() =>
@@ -197,39 +201,45 @@ function DriveVault() {
                     'click',
                   )
                 }
-                className="relative block w-full overflow-hidden rounded-xl border border-paper/10"
+                className="album-polaroid"
+                style={{ ['--tilt' as string]: `${TILTS[i % TILTS.length]}deg` }}
               >
-                <MediaThumb item={item} />
-                {item.kind === 'video' && loadingId !== item.id && (
-                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink/20">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/55 ring-1 ring-gold/50">
-                      <span className="ml-px border-y-[4px] border-l-[7px] border-y-transparent border-l-gold" />
+                {i % 3 === 0 && <i className="album-tape album-tape-l" />}
+                {i % 3 === 2 && <i className="album-tape album-tape-r" />}
+                <span className="album-shot">
+                  <MediaThumb item={item} />
+                  {item.kind === 'video' && loadingId !== item.id && (
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink/20">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/55 ring-1 ring-gold/50">
+                        <span className="ml-px border-y-[4px] border-l-[7px] border-y-transparent border-l-gold" />
+                      </span>
                     </span>
-                  </span>
-                )}
-                {loadingId === item.id && (
-                  <MediaWait compact kind={item.kind} />
-                )}
+                  )}
+                  {loadingId === item.id && <MediaWait compact kind={item.kind} />}
+                </span>
+                <span className="album-caption">{item.kind === 'video' ? 'vídeo' : '\u00a0'}</span>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      {viewer && index !== null && (
-        <MediaViewer
-          item={viewer}
-          index={index}
-          total={items.length}
-          loading={loadingId === viewer.id}
-          onClose={() => {
-            pingArchivoPhotoClose();
-            setIndex(null);
-          }}
-          onPrev={() => void openAt(index - 1, 'anterior')}
-          onNext={() => void openAt(index + 1, 'siguiente')}
-        />
-      )}
+      {viewer && index !== null &&
+        createPortal(
+          <MediaViewer
+            item={viewer}
+            index={index}
+            total={items.length}
+            loading={loadingId === viewer.id}
+            onClose={() => {
+              pingArchivoPhotoClose();
+              setIndex(null);
+            }}
+            onPrev={() => void openAt(index - 1, 'anterior')}
+            onNext={() => void openAt(index + 1, 'siguiente')}
+          />,
+          document.body,
+        )}
     </section>
   );
 }
@@ -292,7 +302,7 @@ function MediaViewer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex touch-none flex-col bg-ink/92"
+      className="fixed inset-0 z-[80] bg-[#120e0a]/94"
       style={{ touchAction: 'none' }}
       onPointerDown={(e) => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -309,10 +319,63 @@ function MediaViewer({
         setDrag(0);
       }}
     >
-      <div className="safe-pad flex items-center justify-between">
+      <div className="flex h-full w-full items-center justify-center px-5">
+        <div
+          className="album-polaroid album-polaroid-lg"
+          style={{
+            translate: `${drag * 0.35}px 0`,
+            ['--tilt' as string]: `${index % 2 === 0 ? -1.2 : 1.1}deg`,
+          }}
+        >
+          <span className="album-shot">
+            {item.kind === 'video' && src?.includes('/preview') && !loading ? (
+              <iframe
+                title={item.name}
+                src={src}
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                className="pointer-events-none w-[min(100%,22rem)] border-0 bg-ink"
+              />
+            ) : item.kind === 'video' ? (
+              <>
+                {playable && (
+                  <video
+                    src={src}
+                    controls
+                    autoPlay
+                    playsInline
+                  className={
+                    ready
+                      ? 'max-h-[min(58vh,28rem)] max-w-full'
+                      : 'pointer-events-none absolute h-px w-px opacity-0'
+                  }
+                    onCanPlay={() => setReady(true)}
+                    onPlaying={() => setReady(true)}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  />
+                )}
+                {waiting && <MediaWait kind="video" poster={item.thumb} />}
+              </>
+            ) : preview ? (
+              <img
+                src={preview}
+                alt=""
+                onError={(e) => {
+                  if (item.thumb && e.currentTarget.src !== item.thumb) e.currentTarget.src = item.thumb;
+                }}
+              />
+            ) : (
+              <MediaWait kind="image" />
+            )}
+          </span>
+          <p className="album-caption">{item.kind === 'video' ? 'vídeo' : '\u00a0'}</p>
+        </div>
+      </div>
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-[calc(var(--safe-top)+1rem)]">
         <button
           type="button"
-          className="rounded-full border border-paper/15 bg-ink/55 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.22em] text-paper/75"
+          className="pointer-events-auto rounded-full border border-paper/15 bg-ink/55 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.22em] text-paper/75"
           onClick={(e) => {
             e.stopPropagation();
             onClose();
@@ -321,83 +384,33 @@ function MediaViewer({
         >
           cerrar
         </button>
-        <p className="text-[11px] uppercase tracking-[0.22em] text-paper/45">
-          {index + 1} / {total}
-        </p>
+        <p className="font-display text-[14px] italic text-paper/55">{index + 1} / {total}</p>
       </div>
 
-      <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pb-[calc(var(--safe-bottom)+1.5rem)]">
-        <div
-          className="relative flex max-h-full max-w-full items-center justify-center"
-          style={{ transform: `translateX(${drag * 0.35}px)` }}
-        >
-          {item.kind === 'video' && src?.includes('/preview') && !loading ? (
-            <iframe
-              title={item.name}
-              src={src}
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-              className="pointer-events-none h-[70vh] w-[min(100%,52rem)] rounded-2xl border-0 bg-ink"
-            />
-          ) : item.kind === 'video' ? (
-            <>
-              {playable && (
-                <video
-                  src={src}
-                  controls
-                  autoPlay
-                  playsInline
-                  className={
-                    ready
-                      ? 'max-h-[78vh] max-w-full rounded-2xl'
-                      : 'pointer-events-none absolute h-px w-px opacity-0'
-                  }
-                  onCanPlay={() => setReady(true)}
-                  onPlaying={() => setReady(true)}
-                  onPointerDown={(e) => e.stopPropagation()}
-                />
-              )}
-              {waiting && <MediaWait kind="video" poster={item.thumb} />}
-            </>
-          ) : preview ? (
-            <img
-              src={preview}
-              alt=""
-              className="max-h-[78vh] max-w-full rounded-2xl object-contain"
-              onError={(e) => {
-                if (item.thumb && e.currentTarget.src !== item.thumb) e.currentTarget.src = item.thumb;
-              }}
-            />
-          ) : (
-            <MediaWait kind="image" />
-          )}
-        </div>
-
-        {total > 1 && (
-          <>
-            <button
-              type="button"
-              aria-label="Anterior"
-              className="absolute left-0 top-0 h-full w-[22%] max-w-[6rem]"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPrev();
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-            />
-            <button
-              type="button"
-              aria-label="Siguiente"
-              className="absolute right-0 top-0 h-full w-[22%] max-w-[6rem]"
-              onClick={(e) => {
-                e.stopPropagation();
-                onNext();
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-            />
-          </>
-        )}
-      </div>
+      {total > 1 && (
+        <>
+          <button
+            type="button"
+            aria-label="Anterior"
+            className="absolute left-0 top-0 z-[1] h-full w-[22%] max-w-[6rem]"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            aria-label="Siguiente"
+            className="absolute right-0 top-0 z-[1] h-full w-[22%] max-w-[6rem]"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -421,7 +434,7 @@ function MediaWait({
             <span className="ml-px border-y-[4px] border-l-[7px] border-y-transparent border-l-gold" />
           )}
         </span>
-        <span className="mt-1.5 text-[9px] font-medium uppercase tracking-[0.16em] text-gold">
+        <span className="mt-1.5 font-display text-[10px] italic text-gold">
           {video ? 'vídeo' : 'foto'}
         </span>
       </span>
@@ -429,9 +442,9 @@ function MediaWait({
   }
 
   return (
-    <div className="relative flex h-[min(70vh,28rem)] w-[min(100%,22rem)] items-center justify-center overflow-hidden rounded-2xl bg-ink ring-1 ring-gold/25">
+    <div className="relative flex min-h-[12rem] w-full items-center justify-center overflow-hidden bg-[#2a2218]">
       {poster && (
-        <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        <img src={poster} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
       )}
       <div className="relative z-10 flex flex-col items-center px-6 text-center">
         <span className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center">
@@ -440,10 +453,10 @@ function MediaWait({
             <span className="ml-1 border-y-[10px] border-l-[16px] border-y-transparent border-l-gold" />
           )}
         </span>
-        <p className="mt-5 font-display text-[2rem] italic leading-none text-paper">
+        <p className="mt-5 font-display text-[1.8rem] italic leading-none text-paper">
           {video ? 'Vídeo' : 'Foto'}
         </p>
-        <p className="mt-3 text-[13px] uppercase tracking-[0.28em] text-gold">Cargando…</p>
+        <p className="mt-3 font-display text-[13px] italic text-gold">revelando…</p>
       </div>
     </div>
   );
@@ -472,14 +485,13 @@ function MediaThumb({ item }: { item: DriveMedia }) {
     <div
       className="flex aspect-square w-full flex-col items-center justify-center px-3"
       style={{
-        background:
-          'radial-gradient(ellipse at 50% 40%, rgba(232,184,109,0.16), rgba(28,23,20,0.95) 62%)',
+        background: 'linear-gradient(180deg, #d8c7a8, #c4b08a)',
       }}
     >
       {item.kind === 'video' ? (
-        <span className="font-display text-[11px] uppercase tracking-[0.22em] text-gold/80">vídeo</span>
+        <span className="font-display text-[12px] italic text-[#6b5340]">vídeo</span>
       ) : (
-        <span className="font-display text-[11px] uppercase tracking-[0.22em] text-paper/40">foto</span>
+        <span className="font-display text-[12px] italic text-[#6b5340]/70">foto</span>
       )}
       <p className="mt-2 line-clamp-2 text-center text-[12px] leading-snug text-paper/55">{item.name}</p>
     </div>
