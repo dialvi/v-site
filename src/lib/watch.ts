@@ -194,6 +194,14 @@ export function pingArchivoLeave() {
   ping(`Archivo · salió · ${watchTime(Math.round((Date.now() - archivoOpenedAt) / 1000))}`);
 }
 
+export function pingArchivoLike(id: number, kind: 'image' | 'video' | undefined, liked: boolean) {
+  ping(`Archivo · ${liked ? 'like' : 'unlike'} ${archivoItem(id, kind)}`);
+}
+
+export function pingArchivoComment(id: number, kind: 'image' | 'video' | undefined, text: string) {
+  ping(`Archivo · comentario ${archivoItem(id, kind)} · "${text}"`);
+}
+
 export function pingHistoriaOpen(beatIndex: number, depth: number) {
   ping(`Historia · lee ${historiaSlide(beatIndex, depth)}`);
 }

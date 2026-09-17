@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MutableRefObject, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
+import { clamp } from '@/lib/motion';
 import {
   archiveConfig,
   fetchDriveFile,
@@ -14,13 +15,96 @@ import {
   signOutGoogle,
   type DriveMedia,
 } from '@/lib/googleDrive';
-import { pingArchivoEnter, pingArchivoLeave, pingArchivoPhoto, pingArchivoPhotoClose } from '@/lib/watch';
+import { pingArchivoComment, pingArchivoEnter, pingArchivoLeave, pingArchivoLike, pingArchivoPhoto, pingArchivoPhotoClose } from '@/lib/watch';
 
 type Props = {
   onBack: () => void;
 };
 
+const NOTES_KEY = 'v-album-notes';
 const TILTS = [-2.6, 1.8, -1.2, 2.4, 0.6, -2.1, 1.5, -0.8];
+
+type AlbumNotes = {
+  likes: Record<string, boolean>;
+  comments: Record<string, string[]>;
+};
+
+function loadNotes(): AlbumNotes {
+  try {
+    const raw = localStorage.getItem(NOTES_KEY);
+    if (!raw) return { likes: {}, comments: {} };
+    const parsed = JSON.parse(raw) as AlbumNotes;
+    return {
+      likes: parsed.likes ?? {},
+      comments: parsed.comments ?? {},
+    };
+  } catch {
+    return { likes: {}, comments: {} };
+  }
+}
+
+function saveNotes(notes: AlbumNotes) {
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  } catch {
+    /* private mode */
+  }
+}
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 2.8;
+
+function useAlbumZoom(scroller: RefObject<HTMLElement | null>) {
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(1);
+  const pinch = useRef<{ dist: number; zoom: number } | null>(null);
+
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+
+    const gap = (a: Touch, b: Touch) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+
+    const apply = (next: number) => {
+      const value = clamp(next, MIN_ZOOM, MAX_ZOOM);
+      zoomRef.current = value;
+      setZoom(value);
+    };
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinch.current = { dist: gap(e.touches[0], e.touches[1]), zoom: zoomRef.current };
+      }
+    };
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || !pinch.current || pinch.current.dist < 8) return;
+      e.preventDefault();
+      apply(pinch.current.zoom * (gap(e.touches[0], e.touches[1]) / pinch.current.dist));
+    };
+    const onEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) pinch.current = null;
+    };
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      apply(zoomRef.current * (e.deltaY > 0 ? 0.94 : 1.06));
+    };
+
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onStart);
+      el.removeEventListener('touchmove', onMove);
+      el.removeEventListener('touchend', onEnd);
+      el.removeEventListener('touchcancel', onEnd);
+      el.removeEventListener('wheel', onWheel);
+    };
+  }, [scroller]);
+
+  return zoom;
+}
 
 export function ArchivoLayer({ onBack }: Props) {
   useEffect(() => {
@@ -33,21 +117,45 @@ export function ArchivoLayer({ onBack }: Props) {
     onBack();
   };
 
+  const [stage, setStage] = useState<HTMLDivElement | null>(null);
+  const [looking, setLooking] = useState(false);
+  const closer = useRef<() => void>(() => undefined);
+  const sheet = useRef<HTMLDivElement>(null);
+  const zoom = useAlbumZoom(sheet);
+
   return (
     <div className="album-page z-20 animate-depth-in">
-      <header className="relative z-[1] flex shrink-0 items-center justify-between px-5 pb-2 pt-[calc(var(--safe-top)+1rem)]">
-        <BackChip onClick={leave} label="universo" />
+      <header className="relative z-30 flex shrink-0 items-center justify-between px-5 pb-2 pt-[calc(var(--safe-top)+1rem)]">
+        <BackChip
+          onClick={() => {
+            if (looking) closer.current();
+            else leave();
+          }}
+          label={looking ? 'cerrar' : 'universo'}
+        />
         <p className="font-display text-[15px] italic text-paper/70">el álbum</p>
       </header>
 
-      <div className="album-sheet px-6 pb-[calc(var(--safe-bottom)+3rem)]">
-        <DriveVault />
+      <div ref={setStage} className="relative min-h-0 flex-1">
+        <div ref={sheet} className="album-sheet px-6 pb-[calc(var(--safe-bottom)+3rem)]">
+          <div style={{ zoom } as CSSProperties}>
+            <DriveVault stage={stage} onLooking={setLooking} closer={closer} />
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function DriveVault() {
+function DriveVault({
+  stage,
+  onLooking,
+  closer,
+}: {
+  stage: HTMLDivElement | null;
+  onLooking: (open: boolean) => void;
+  closer: MutableRefObject<() => void>;
+}) {
   const configured = isArchiveConfigured();
   const live = getLiveSession();
   const [email, setEmail] = useState<string | null>(live?.email ?? null);
@@ -59,6 +167,18 @@ function DriveVault() {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(Boolean(configured && !live));
   const viewer = index !== null ? items[index] ?? null : null;
+
+  useEffect(() => {
+    onLooking(index !== null);
+  }, [index, onLooking]);
+
+  useEffect(() => {
+    closer.current = () => {
+      if (index === null) return;
+      pingArchivoPhotoClose();
+      setIndex(null);
+    };
+  }, [closer, index]);
 
   useEffect(() => {
     if (email && token) rememberSession({ email, token, items });
@@ -145,10 +265,9 @@ function DriveVault() {
 
   return (
     <section>
-      <p className="mb-1 font-display text-[1.55rem] italic leading-tight text-paper/85">
+      <p className="mb-7 font-display text-[1.55rem] italic leading-tight text-paper/85">
         Para que los recuerdos no llenen tu iCloud
       </p>
-      <p className="mb-7 font-display text-[13px] italic text-dust/75">pegadas aquí, una al lado de la otra</p>
       {!configured && (
         <p className="rounded-sm border border-dashed border-paper/20 bg-paper/5 px-4 py-4 text-[14px] leading-relaxed text-paper/55">
           Aún no está conectado. Falta el acceso de Google.
@@ -224,22 +343,23 @@ function DriveVault() {
         </ul>
       )}
 
-      {viewer && index !== null &&
-        createPortal(
-          <MediaViewer
-            item={viewer}
-            index={index}
-            total={items.length}
-            loading={loadingId === viewer.id}
-            onClose={() => {
-              pingArchivoPhotoClose();
-              setIndex(null);
-            }}
-            onPrev={() => void openAt(index - 1, 'anterior')}
-            onNext={() => void openAt(index + 1, 'siguiente')}
-          />,
-          document.body,
-        )}
+      {viewer && index !== null && stage
+        ? createPortal(
+            <MediaViewer
+              item={viewer}
+              index={index}
+              total={items.length}
+              loading={loadingId === viewer.id}
+              onClose={() => {
+                pingArchivoPhotoClose();
+                setIndex(null);
+              }}
+              onPrev={() => void openAt(index - 1, 'anterior')}
+              onNext={() => void openAt(index + 1, 'siguiente')}
+            />,
+            stage,
+          )
+        : null}
     </section>
   );
 }
@@ -262,12 +382,16 @@ function MediaViewer({
   onNext: () => void;
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
-  const [drag, setDrag] = useState(0);
+  const lastTap = useRef(0);
+  const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [ready, setReady] = useState(false);
+  const [notes, setNotes] = useState(loadNotes);
   const src = item.src;
   const preview = src && !src.includes('/preview') ? src : item.thumb;
   const playable = Boolean(src && !src.includes('/preview'));
   const waiting = item.kind === 'video' && (loading || !playable || !ready);
+  const key = String(index);
+  const liked = Boolean(notes.likes[key]);
 
   useEffect(() => {
     setReady(false);
@@ -283,134 +407,242 @@ function MediaViewer({
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, onPrev, onNext]);
 
+  const toggleLike = (next = !liked) => {
+    const updated: AlbumNotes = {
+      likes: { ...notes.likes },
+      comments: notes.comments,
+    };
+    if (next) updated.likes[key] = true;
+    else delete updated.likes[key];
+    saveNotes(updated);
+    setNotes(updated);
+    pingArchivoLike(index, item.kind, next);
+    haptic(next ? 'success' : 'light');
+  };
+
+  const addComment = (text: string) => {
+    const updated: AlbumNotes = {
+      likes: notes.likes,
+      comments: {
+        ...notes.comments,
+        [key]: [...(notes.comments[key] ?? []), text],
+      },
+    };
+    saveNotes(updated);
+    setNotes(updated);
+    pingArchivoComment(index, item.kind, text);
+    haptic('light');
+  };
+
   const finish = (e: { clientX: number; clientY: number; target: EventTarget | null }) => {
     if (!start.current) return;
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
     start.current = null;
-    setDrag(0);
+    setDrag({ x: 0, y: 0 });
     if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy)) {
       if (dx < 0) onNext();
       else onPrev();
       return;
     }
-    const el = e.target as HTMLElement | null;
-    if (Math.abs(dx) < 8 && Math.abs(dy) < 8 && el && !el.closest('img, video, iframe, button')) {
+    if (dy >= 72 && Math.abs(dy) > Math.abs(dx)) {
       onClose();
+      return;
     }
+    const el = e.target as HTMLElement | null;
+    if (Math.abs(dx) >= 8 || Math.abs(dy) >= 8) return;
+    if (el?.closest('img, video')) {
+      const now = Date.now();
+      if (now - lastTap.current < 280) {
+        lastTap.current = 0;
+        if (!liked) toggleLike(true);
+        return;
+      }
+      lastTap.current = now;
+      return;
+    }
+    if (el && !el.closest('img, video, iframe, button, input, form')) onClose();
   };
 
   return (
     <div
-      className="fixed inset-0 z-[80] bg-[#120e0a]/94"
+      className="absolute inset-0 z-10 flex flex-col bg-[#120e0a]/96"
       style={{ touchAction: 'none' }}
       onPointerDown={(e) => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
+        if ((e.target as HTMLElement | null)?.closest('button, input, form, textarea')) return;
         start.current = { x: e.clientX, y: e.clientY };
-        setDrag(0);
+        setDrag({ x: 0, y: 0 });
       }}
       onPointerMove={(e) => {
         if (!start.current) return;
-        setDrag(e.clientX - start.current.x);
+        setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y });
       }}
       onPointerUp={(e) => finish(e)}
       onPointerCancel={() => {
         start.current = null;
-        setDrag(0);
+        setDrag({ x: 0, y: 0 });
       }}
     >
-      <div className="flex h-full w-full items-center justify-center px-5">
-        <div
-          className="album-polaroid album-polaroid-lg"
-          style={{
-            translate: `${drag * 0.35}px 0`,
-            ['--tilt' as string]: `${index % 2 === 0 ? -1.2 : 1.1}deg`,
-          }}
-        >
-          <span className="album-shot">
-            {item.kind === 'video' && src?.includes('/preview') && !loading ? (
-              <iframe
-                title={item.name}
+      <div
+        className="relative flex min-h-0 flex-1 items-center justify-center"
+        style={{ translate: `${drag.x * 0.4}px ${Math.max(0, drag.y) * 0.35}px` }}
+      >
+        {item.kind === 'video' && src?.includes('/preview') && !loading ? (
+          <iframe
+            title={item.name}
+            src={src}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            className="h-[88%] w-[min(100%,42rem)] border-0 bg-ink"
+          />
+        ) : item.kind === 'video' ? (
+          <>
+            {playable && (
+              <video
                 src={src}
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-                className="pointer-events-none w-[min(100%,22rem)] border-0 bg-ink"
+                controls
+                autoPlay
+                playsInline
+                className={
+                  ready
+                    ? 'max-h-full max-w-full'
+                    : 'pointer-events-none absolute h-px w-px opacity-0'
+                }
+                onCanPlay={() => setReady(true)}
+                onPlaying={() => setReady(true)}
+                onPointerDown={(e) => e.stopPropagation()}
               />
-            ) : item.kind === 'video' ? (
-              <>
-                {playable && (
-                  <video
-                    src={src}
-                    controls
-                    autoPlay
-                    playsInline
-                  className={
-                    ready
-                      ? 'max-h-[min(58vh,28rem)] max-w-full'
-                      : 'pointer-events-none absolute h-px w-px opacity-0'
-                  }
-                    onCanPlay={() => setReady(true)}
-                    onPlaying={() => setReady(true)}
-                    onPointerDown={(e) => e.stopPropagation()}
-                  />
-                )}
-                {waiting && <MediaWait kind="video" poster={item.thumb} />}
-              </>
-            ) : preview ? (
-              <img
-                src={preview}
-                alt=""
-                onError={(e) => {
-                  if (item.thumb && e.currentTarget.src !== item.thumb) e.currentTarget.src = item.thumb;
-                }}
-              />
-            ) : (
-              <MediaWait kind="image" />
             )}
-          </span>
-          <p className="album-caption">{item.kind === 'video' ? 'vídeo' : '\u00a0'}</p>
-        </div>
+            {waiting && <MediaWait kind="video" poster={item.thumb} />}
+          </>
+        ) : preview ? (
+          <img
+            src={preview}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+            onError={(e) => {
+              if (item.thumb && e.currentTarget.src !== item.thumb) e.currentTarget.src = item.thumb;
+            }}
+          />
+        ) : (
+          <MediaWait kind="image" />
+        )}
+        {total > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label="Anterior"
+              className="absolute inset-y-0 left-0 z-10 flex w-[30%] max-w-[7.5rem] items-center justify-start pl-2"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrev();
+              }}
+            >
+              <span className="font-display text-[2.2rem] leading-none text-paper/45">‹</span>
+            </button>
+            <button
+              type="button"
+              aria-label="Siguiente"
+              className="absolute inset-y-0 right-0 z-10 flex w-[30%] max-w-[7.5rem] items-center justify-end pr-2"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                onNext();
+              }}
+            >
+              <span className="font-display text-[2.2rem] leading-none text-paper/45">›</span>
+            </button>
+          </>
+        )}
       </div>
+      <MediaSocial
+        index={index}
+        total={total}
+        liked={liked}
+        comments={notes.comments[key] ?? []}
+        onLike={() => toggleLike()}
+        onComment={addComment}
+      />
+    </div>
+  );
+}
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-[calc(var(--safe-top)+1rem)]">
+function MediaSocial({
+  index,
+  total,
+  liked,
+  comments,
+  onLike,
+  onComment,
+}: {
+  index: number;
+  total: number;
+  liked: boolean;
+  comments: string[];
+  onLike: () => void;
+  onComment: (text: string) => void;
+}) {
+  const [text, setText] = useState('');
+
+  useEffect(() => {
+    setText('');
+  }, [index]);
+
+  const send = (e: FormEvent) => {
+    e.preventDefault();
+    const value = text.trim();
+    if (!value) return;
+    onComment(value);
+    setText('');
+  };
+
+  return (
+    <div
+      className="shrink-0 border-t border-paper/10 bg-[#1a1410]/95 px-4 pb-[calc(var(--safe-bottom)+0.75rem)] pt-3"
+      style={{ touchAction: 'auto' }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-center gap-3">
         <button
           type="button"
-          className="pointer-events-auto rounded-full border border-paper/15 bg-ink/55 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.22em] text-paper/75"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={liked ? 'Quitar like' : 'Like'}
+          onClick={onLike}
+          className={`text-[1.85rem] leading-none ${liked ? 'text-gold' : 'text-paper/70'}`}
         >
-          cerrar
+          {liked ? '♥' : '♡'}
         </button>
-        <p className="font-display text-[14px] italic text-paper/55">{index + 1} / {total}</p>
+        <p className="font-display text-[13px] italic text-paper/40">
+          {index + 1} / {total}
+        </p>
       </div>
-
-      {total > 1 && (
-        <>
-          <button
-            type="button"
-            aria-label="Anterior"
-            className="absolute left-0 top-0 z-[1] h-full w-[22%] max-w-[6rem]"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPrev();
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-          />
-          <button
-            type="button"
-            aria-label="Siguiente"
-            className="absolute right-0 top-0 z-[1] h-full w-[22%] max-w-[6rem]"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNext();
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-          />
-        </>
+      {comments.length > 0 && (
+        <ul className="mt-2 max-h-20 space-y-1 overflow-y-auto">
+          {comments.slice(-4).map((comment, i) => (
+            <li key={`${comment}-${i}`} className="text-[13px] leading-snug text-paper/75">
+              <span className="font-display italic text-gold/80">tú </span>
+              {comment}
+            </li>
+          ))}
+        </ul>
       )}
+      <form onSubmit={send} className="mt-3 flex items-center gap-2">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Escribe un comentario…"
+          maxLength={280}
+          className="selectable min-w-0 flex-1 rounded-full border border-paper/15 bg-paper/10 px-4 py-2.5 text-[14px] text-paper outline-none placeholder:text-paper/35"
+        />
+        <button
+          type="submit"
+          disabled={!text.trim()}
+          className="shrink-0 font-display text-[14px] italic text-gold disabled:text-paper/25"
+        >
+          enviar
+        </button>
+      </form>
     </div>
   );
 }
