@@ -10,6 +10,7 @@ export type StoryBeat = {
   index: string;
   emoji: string;
   title: string;
+  date?: string;
   lead: string;
   quote?: string;
   note?: string;
@@ -25,6 +26,7 @@ export const storyBeats: StoryBeat[] = [
   {
     id: 'instagram',
     index: '01',
+    date: '17/03/2026',
     emoji: '👀',
     title: 'Instagram',
     lead: 'Quién me iba a decir en marzo que este mensaje iba a llevarme a hacer esta web a los 6 meses…',
@@ -67,6 +69,7 @@ export const storyBeats: StoryBeat[] = [
     index: '02',
     emoji: '⛰️',
     title: 'El plan del Hike',
+    date: '23/05/2026',
     lead: 'Muchas coincidencias en poco tiempo.',
     note: 'El 22 de mayo te envié el famoso podcast 1:44 organizando el hike… me respondiste con un mensaje de voz de la misma duración. Ayayay.',
     details: [
@@ -162,8 +165,9 @@ export const storyBeats: StoryBeat[] = [
   {
     id: 'pantano',
     index: '03',
-    emoji: '🎙️',
+    emoji: '🏖️​',
     title: 'Pantano VIP',
+    date: '31/05/2026',
     lead: 'Playita priv sin salir de Madrid, picnic a orillas de San Juan, larga y peligrosísima travesia en yate, y chiringuito con vistazas',
     details: [
       {
@@ -214,48 +218,56 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '10',
         title: 'Chiringuito 02',
-        body: 'Leimos la carta y DECIDIDO! obviamente los torreznos y pedimos ademas unos tomatitos con atun, calamares... todo riquisimo... Peeero lamentablemente yo no podía comer los torreznos por la mano, que mme impedía cortarlos yyyyy eeeeh la persona que estaba más lejos de la mesa me ayudó y me los cortó y esto aunque pueda parecer algo sencillo sin importancia para mi fue un detalle que me encantó 🫠​',
+        body: 'Leimos la carta y DECIDIDO! Era obvio, los torreznos! Pedimos además unos tomatitos con atun, calamares... todo riquísimo...  Lamentablemente mi accidentada mano me impedía cortar los amsiados torreznos yyyyy eeeeh la persona que estaba más lejos de la mesa me ayudó y me los cortó y esto aunque pueda parecer algo sencillo sin importancia para mi fue un detalle que me encantó 🫠​',
+      },
+      {
+        kicker: '11',
+        title: 'En busca del atardecer',
+        body: 'Fuimos rápidamente a Jeep para buscar un alto donde ver el atardecer y el amanecer lunar (aquel día hubo Luna llena 🌕​). Entramos por una pista de tierra y nos subimos a unas rocas con el coche y nosotros encima del techo buscando la Luna',
       },
     ],
   },
   {
-    id: 'queso',
+    id: 'tour-madrid-norte-v1',
+    lat: 40.5203,
+    lng: -3.79505,
     index: '04',
-    emoji: '🧀',
-    title: 'El queso que nunca llegó',
-    lead: 'La historia de la tabla de quesos.',
+    emoji: '🐐​​',
+    title: 'Madrid Norte V1',
+    lead: 'Plan improvisado con Jarritos, Cabras y mucho más',
+    date: '06/06/2026',
     details: [
       {
         kicker: '01',
-        title: 'Recordar historia',
-        body: 'La idea era perfecta. La ejecución, menos.',
+        title: 'Empezamoos fuerte',
+        body: 'Te recogí en Villa, cuando bajaste del piso me ocurrió algo que me desconcentró un poco 😂 El qué es un secreto. La verdad es que no tenia nada planeado al 100% y te propusé ir a Aranjuez si no lo conocias peeero ya habías estado asi queeee mi plan estrella se iba a hacer realidad. ',
       },
       {
         kicker: '02',
-        title: 'Lo que quedó',
-        body: 'No fue el queso. Fue lo fácil que fue reírse de que no estuviera.',
+        title: 'Primer tramo',
+        body: 'En el coche, empiezo a notar algo que me pone nervioso 🥵​, yo queria mantener una conversación extemadamente agradable pero en el momento de la verdad ninguno de los protocolos anti-tos que llevaba días planeando funcionó y me quedé sin voz 🤐 Fue un placer escucharte, gracias por la paciencia este día jaja  ​🙂‍↕️​',
       },
-    ],
-  },
-  {
-    id: 'cabras',
-    index: '05',
-    emoji: '🐐',
-    title: 'Cabras por Madrid',
-    lead: 'Vuestra coña.',
-    lat: 40.5203,
-    lng: -3.79505,
-    details: [
       {
-        kicker: '01',
-        title: 'Recordar historia',
-        body: 'Una frase que no debería funcionar fuera de los dos. Y que, por eso mismo, funciona demasiado bien.',
+        kicker: '03',
+        title: 'Centro comercial',
+        body: 'Si un centro comercial, poco interesante ​😶‍🌫️ pero teniamos que hacer tiempo para que cayerá el sol un poco, hacia calor y en un interior ibamos a estar cómodos. Decidimos tomar Ice Tea y aprendí que el Macha sabe a pasto, tenias razón! La verdad fue bastante bien!',
       },
+      {
+        kicker: '04',
+        title: 'Paseito por El Pardo',
+        body: 'Llegamos a un Spot, uno de mis favoritos cerca de casa. Al salir del coche te preguté si tenías sed y saqué unos Jarritos sorpresa. Fuimos caminando hasta donde estaban las cabras sin abrir los Jarritos. Se nos calentaron un poco pero estaban deliciosos igual, recuerdas de que sabor eran? Yo si jaja Secreto!',
+      },
+      {
+        kicker: '05',
+        title: 'Cabras y Jarritos',
+        body: '',
+      },
+
     ],
   },
   {
     id: 'mexicana',
-    index: '06',
+    index: '05',
     emoji: '🇲🇽',
     title: 'La fiesta mexicana',
     lead: 'Lo que se suponía que iba a ser. Y lo que fue.',

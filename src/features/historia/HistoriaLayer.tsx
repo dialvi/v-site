@@ -265,6 +265,9 @@ function BeatColumn({
             {beat.index} · {beat.emoji}
           </p>
           <h2 className="mt-3 font-display text-[2.15rem] italic leading-none text-paper">{beat.title}</h2>
+          {beat.date && (
+            <p className="mt-2 text-[12px] uppercase tracking-[0.22em] text-gold/70">{beat.date}</p>
+          )}
           <p className="mt-5 text-[16px] leading-relaxed text-paper/80">{beat.lead}</p>
           {beat.quote && (
             <p className="selectable mt-6 border-l border-gold/40 pl-4 font-display text-[1.15rem] italic leading-snug text-paper/70">
