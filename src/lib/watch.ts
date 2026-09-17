@@ -133,12 +133,65 @@ function historiaSlide(beatIndex: number, depth: number) {
   return `${beat.index}.${step} ${title}`.trim();
 }
 
-function historiaTime(seconds: number) {
+function watchTime(seconds: number) {
   if (seconds < 2) return 'pasó rápido';
   if (seconds < 60) return `${seconds}s`;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return s ? `${m}m ${s}s` : `${m}m`;
+}
+
+function archivoItem(id: number, kind?: 'image' | 'video') {
+  return `${kind === 'video' ? 'vídeo' : 'foto'} ${id}`;
+}
+
+let archivoLeft = false;
+let archivoOpenedAt = 0;
+let archivoPhoto: { id: number; kind?: 'image' | 'video'; at: number } | null = null;
+
+export function pingArchivoEnter() {
+  archivoLeft = false;
+  archivoOpenedAt = Date.now();
+  archivoPhoto = null;
+}
+
+export function pingArchivoPhoto(
+  how: 'click' | 'siguiente' | 'anterior',
+  id: number,
+  kind?: 'image' | 'video',
+) {
+  const prev = archivoPhoto;
+  const now = Date.now();
+  if (prev) {
+    const spent = watchTime(Math.round((now - prev.at) / 1000));
+    if (how === 'click') {
+      ping(`Archivo · click ${archivoItem(id, kind)} · ${spent} en ${archivoItem(prev.id, prev.kind)}`);
+    } else {
+      const arrow = how === 'siguiente' ? '→' : '←';
+      ping(
+        `Archivo · ${how} ${arrow} ${archivoItem(id, kind)} · ${spent} en ${archivoItem(prev.id, prev.kind)}`,
+      );
+    }
+  } else {
+    ping(`Archivo · click ${archivoItem(id, kind)}`);
+  }
+  archivoPhoto = { id, kind, at: now };
+}
+
+export function pingArchivoPhotoClose() {
+  const prev = archivoPhoto;
+  if (!prev) return;
+  ping(
+    `Archivo · cerró ${archivoItem(prev.id, prev.kind)} · ${watchTime(Math.round((Date.now() - prev.at) / 1000))}`,
+  );
+  archivoPhoto = null;
+}
+
+export function pingArchivoLeave() {
+  if (archivoLeft) return;
+  archivoLeft = true;
+  pingArchivoPhotoClose();
+  ping(`Archivo · salió · ${watchTime(Math.round((Date.now() - archivoOpenedAt) / 1000))}`);
 }
 
 export function pingHistoriaOpen(beatIndex: number, depth: number) {
@@ -154,12 +207,12 @@ export function pingHistoriaMove(
 ) {
   const how = fromBeat !== toBeat ? (toBeat > fromBeat ? '→' : '←') : toDepth > fromDepth ? '↓' : '↑';
   ping(
-    `Historia · ${how} ${historiaSlide(toBeat, toDepth)} · ${historiaTime(seconds)} en ${historiaSlide(fromBeat, fromDepth)}`,
+    `Historia · ${how} ${historiaSlide(toBeat, toDepth)} · ${watchTime(seconds)} en ${historiaSlide(fromBeat, fromDepth)}`,
   );
 }
 
 export function pingHistoriaLeave(beatIndex: number, depth: number, seconds: number) {
-  ping(`Historia · salió · ${historiaTime(seconds)} en ${historiaSlide(beatIndex, depth)}`);
+  ping(`Historia · salió · ${watchTime(seconds)} en ${historiaSlide(beatIndex, depth)}`);
 }
 
 export function pingHistoriaMap(beatIndex: number, depth: number) {
