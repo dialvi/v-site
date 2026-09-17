@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type MutableRefObject, type RefObject } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
@@ -51,60 +51,7 @@ function saveNotes(notes: AlbumNotes) {
   }
 }
 const MIN_ZOOM = 1;
-const MAX_ZOOM = 2.8;
-
-function useAlbumZoom(scroller: RefObject<HTMLElement | null>) {
-  const [zoom, setZoom] = useState(1);
-  const zoomRef = useRef(1);
-  const pinch = useRef<{ dist: number; zoom: number } | null>(null);
-
-  useEffect(() => {
-    const el = scroller.current;
-    if (!el) return;
-
-    const gap = (a: Touch, b: Touch) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-
-    const apply = (next: number) => {
-      const value = clamp(next, MIN_ZOOM, MAX_ZOOM);
-      zoomRef.current = value;
-      setZoom(value);
-    };
-
-    const onStart = (e: TouchEvent) => {
-      if (e.touches.length === 2) {
-        pinch.current = { dist: gap(e.touches[0], e.touches[1]), zoom: zoomRef.current };
-      }
-    };
-    const onMove = (e: TouchEvent) => {
-      if (e.touches.length !== 2 || !pinch.current || pinch.current.dist < 8) return;
-      e.preventDefault();
-      apply(pinch.current.zoom * (gap(e.touches[0], e.touches[1]) / pinch.current.dist));
-    };
-    const onEnd = (e: TouchEvent) => {
-      if (e.touches.length < 2) pinch.current = null;
-    };
-    const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey) return;
-      e.preventDefault();
-      apply(zoomRef.current * (e.deltaY > 0 ? 0.94 : 1.06));
-    };
-
-    el.addEventListener('touchstart', onStart, { passive: true });
-    el.addEventListener('touchmove', onMove, { passive: false });
-    el.addEventListener('touchend', onEnd);
-    el.addEventListener('touchcancel', onEnd);
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', onStart);
-      el.removeEventListener('touchmove', onMove);
-      el.removeEventListener('touchend', onEnd);
-      el.removeEventListener('touchcancel', onEnd);
-      el.removeEventListener('wheel', onWheel);
-    };
-  }, [scroller]);
-
-  return zoom;
-}
+const MAX_ZOOM = 4;
 
 export function ArchivoLayer({ onBack }: Props) {
   useEffect(() => {
@@ -120,8 +67,6 @@ export function ArchivoLayer({ onBack }: Props) {
   const [stage, setStage] = useState<HTMLDivElement | null>(null);
   const [looking, setLooking] = useState(false);
   const closer = useRef<() => void>(() => undefined);
-  const sheet = useRef<HTMLDivElement>(null);
-  const zoom = useAlbumZoom(sheet);
 
   return (
     <div className="album-page z-20 animate-depth-in">
@@ -137,10 +82,8 @@ export function ArchivoLayer({ onBack }: Props) {
       </header>
 
       <div ref={setStage} className="relative min-h-0 flex-1">
-        <div ref={sheet} className="album-sheet px-6 pb-[calc(var(--safe-bottom)+3rem)]">
-          <div style={{ zoom } as CSSProperties}>
-            <DriveVault stage={stage} onLooking={setLooking} closer={closer} />
-          </div>
+        <div className="album-sheet px-6 pb-[calc(var(--safe-bottom)+3rem)]">
+          <DriveVault stage={stage} onLooking={setLooking} closer={closer} />
         </div>
       </div>
     </div>
@@ -383,7 +326,11 @@ function MediaViewer({
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
   const lastTap = useRef(0);
+  const pts = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ dist: number; s: number; x: number; y: number } | null>(null);
+  const zoomRef = useRef({ s: 1, x: 0, y: 0 });
   const [drag, setDrag] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState({ s: 1, x: 0, y: 0 });
   const [ready, setReady] = useState(false);
   const [notes, setNotes] = useState(loadNotes);
   const src = item.src;
@@ -392,9 +339,28 @@ function MediaViewer({
   const waiting = item.kind === 'video' && (loading || !playable || !ready);
   const key = String(index);
   const liked = Boolean(notes.likes[key]);
+  const zoomed = zoom.s > 1.04;
+
+  const putZoom = (next: { s: number; x: number; y: number }) => {
+    const s = clamp(next.s, MIN_ZOOM, MAX_ZOOM);
+    const slack = (s - 1) * 280;
+    const value = {
+      s,
+      x: s <= 1.02 ? 0 : clamp(next.x, -slack, slack),
+      y: s <= 1.02 ? 0 : clamp(next.y, -slack, slack),
+    };
+    if (s <= 1.02) {
+      value.s = 1;
+      value.x = 0;
+      value.y = 0;
+    }
+    zoomRef.current = value;
+    setZoom(value);
+  };
 
   useEffect(() => {
     setReady(false);
+    putZoom({ s: 1, x: 0, y: 0 });
   }, [item.id, src]);
 
   useEffect(() => {
@@ -435,6 +401,11 @@ function MediaViewer({
   };
 
   const finish = (e: { clientX: number; clientY: number; target: EventTarget | null }) => {
+    if (pinch.current || zoomRef.current.s > 1.04) {
+      start.current = null;
+      setDrag({ x: 0, y: 0 });
+      return;
+    }
     if (!start.current) return;
     const dx = e.clientX - start.current.x;
     const dy = e.clientY - start.current.y;
@@ -451,6 +422,7 @@ function MediaViewer({
     }
     const el = e.target as HTMLElement | null;
     if (Math.abs(dx) >= 8 || Math.abs(dy) >= 8) return;
+    if (el?.closest('[data-skip]')) return;
     if (el?.closest('img, video')) {
       const now = Date.now();
       if (now - lastTap.current < 280) {
@@ -464,6 +436,12 @@ function MediaViewer({
     if (el && !el.closest('img, video, iframe, button, input, form')) onClose();
   };
 
+  const mediaStyle = {
+    transform: `translate(${zoom.x + drag.x * (zoomed ? 0 : 0.4)}px, ${zoom.y + Math.max(0, drag.y) * (zoomed ? 0 : 0.35)}px) scale(${zoom.s})`,
+    transformOrigin: 'center center',
+    touchAction: 'none',
+  } as const;
+
   return (
     <div
       className="absolute inset-0 z-10 flex flex-col bg-[#120e0a]/96"
@@ -471,23 +449,69 @@ function MediaViewer({
       onPointerDown={(e) => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
         if ((e.target as HTMLElement | null)?.closest('button, input, form, textarea')) return;
+        pts.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pts.current.size >= 2) {
+          const [a, b] = [...pts.current.values()];
+          pinch.current = {
+            dist: Math.hypot(a.x - b.x, a.y - b.y),
+            s: zoomRef.current.s,
+            x: zoomRef.current.x,
+            y: zoomRef.current.y,
+          };
+          start.current = null;
+          setDrag({ x: 0, y: 0 });
+          return;
+        }
         start.current = { x: e.clientX, y: e.clientY };
         setDrag({ x: 0, y: 0 });
       }}
       onPointerMove={(e) => {
+        if (!pts.current.has(e.pointerId)) return;
+        pts.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pinch.current && pts.current.size >= 2) {
+          const [a, b] = [...pts.current.values()];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          if (pinch.current.dist < 8) return;
+          putZoom({
+            s: pinch.current.s * (dist / pinch.current.dist),
+            x: pinch.current.x,
+            y: pinch.current.y,
+          });
+          return;
+        }
         if (!start.current) return;
-        setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y });
+        const dx = e.clientX - start.current.x;
+        const dy = e.clientY - start.current.y;
+        if (zoomRef.current.s > 1.04) {
+          putZoom({
+            s: zoomRef.current.s,
+            x: zoomRef.current.x + dx,
+            y: zoomRef.current.y + dy,
+          });
+          start.current = { x: e.clientX, y: e.clientY };
+          return;
+        }
+        setDrag({ x: dx, y: dy });
       }}
-      onPointerUp={(e) => finish(e)}
-      onPointerCancel={() => {
+      onPointerUp={(e) => {
+        pts.current.delete(e.pointerId);
+        if (pts.current.size < 2) pinch.current = null;
+        finish(e);
+      }}
+      onPointerCancel={(e) => {
+        pts.current.delete(e.pointerId);
+        pinch.current = null;
         start.current = null;
         setDrag({ x: 0, y: 0 });
       }}
+      onWheel={(e) => {
+        if (!e.ctrlKey && Math.abs(e.deltaY) < 1) return;
+        e.preventDefault();
+        const next = zoomRef.current.s * (e.deltaY > 0 ? 0.92 : 1.08);
+        putZoom({ s: next, x: zoomRef.current.x, y: zoomRef.current.y });
+      }}
     >
-      <div
-        className="relative flex min-h-0 flex-1 items-center justify-center"
-        style={{ translate: `${drag.x * 0.4}px ${Math.max(0, drag.y) * 0.35}px` }}
-      >
+      <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
         {item.kind === 'video' && src?.includes('/preview') && !loading ? (
           <iframe
             title={item.name}
@@ -501,7 +525,7 @@ function MediaViewer({
             {playable && (
               <video
                 src={src}
-                controls
+                controls={!zoomed}
                 autoPlay
                 playsInline
                 className={
@@ -509,9 +533,9 @@ function MediaViewer({
                     ? 'max-h-full max-w-full'
                     : 'pointer-events-none absolute h-px w-px opacity-0'
                 }
+                style={ready ? mediaStyle : undefined}
                 onCanPlay={() => setReady(true)}
                 onPlaying={() => setReady(true)}
-                onPointerDown={(e) => e.stopPropagation()}
               />
             )}
             {waiting && <MediaWait kind="video" poster={item.thumb} />}
@@ -520,7 +544,8 @@ function MediaViewer({
           <img
             src={preview}
             alt=""
-            className="max-h-full max-w-full object-contain"
+            className="max-h-full max-w-full object-contain will-change-transform"
+            style={mediaStyle}
             onError={(e) => {
               if (item.thumb && e.currentTarget.src !== item.thumb) e.currentTarget.src = item.thumb;
             }}
@@ -528,12 +553,13 @@ function MediaViewer({
         ) : (
           <MediaWait kind="image" />
         )}
-        {total > 1 && (
+        {total > 1 && !zoomed && (
           <>
             <button
               type="button"
+              data-skip="1"
               aria-label="Anterior"
-              className="absolute inset-y-0 left-0 z-10 flex w-[30%] max-w-[7.5rem] items-center justify-start pl-2"
+              className="absolute inset-y-0 left-0 z-10 flex w-[22%] max-w-[5.5rem] items-center justify-start pl-2"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
@@ -544,8 +570,9 @@ function MediaViewer({
             </button>
             <button
               type="button"
+              data-skip="1"
               aria-label="Siguiente"
-              className="absolute inset-y-0 right-0 z-10 flex w-[30%] max-w-[7.5rem] items-center justify-end pr-2"
+              className="absolute inset-y-0 right-0 z-10 flex w-[22%] max-w-[5.5rem] items-center justify-end pr-2"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => {
                 e.stopPropagation();
