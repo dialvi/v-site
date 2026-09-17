@@ -135,6 +135,7 @@
 
 .v-pin i {
   display: block;
+  position: relative;
   width: 14px;
   height: 14px;
   margin: 4px;
@@ -143,12 +144,28 @@
   box-shadow: 0 0 16px rgba(226, 58, 50, 0.85);
 }
 
+.v-pin i b {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgba(12, 11, 10, 0.35);
+}
+
 .v-pin-on i {
   width: 18px;
   height: 18px;
   margin: 5px;
   background: #ff4d44;
   box-shadow: 0 0 20px rgba(255, 77, 68, 1);
+}
+
+.v-pin-on i b {
+  width: 7px;
+  height: 7px;
 }
 
 .sky-star {

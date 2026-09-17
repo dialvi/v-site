@@ -7,6 +7,8 @@ export type MapLink = {
   focus?: string;
 };
 
+export type PlacePlan = 'hike' | 'san-juan' | 'madrid-norte' | 'rooftop';
+
 export type Place = {
   id: string;
   lat: number;
@@ -15,6 +17,8 @@ export type Place = {
   kicker: string;
   body: string;
   storyId?: string;
+  plan?: PlacePlan;
+  seq?: number;
   links?: MapLink[];
 };
 
@@ -68,7 +72,9 @@ const extras: Place[] = [
     lng: -3.79408,
     label: 'Aquí tomamos el primer jarritos',
     kicker: 'Madrid',
-    body: 'Un jarrito. El primero. El mapa se acuerda aunque el vaso ya no esté.',
+    body: 'Un jarrito. El primero. manguito y guava. El tuyo más rico ​🙂‍↕️​',
+    plan: 'madrid-norte',
+    seq: 1,
     links: [{ section: 'historia', label: 'Ir a Historia', focus: 'cabras' }],
   },
   {
@@ -78,6 +84,8 @@ const extras: Place[] = [
     label: 'Aparcamos el jeep',
     kicker: 'El Hike',
     body: 'Aquí aparcamos el jeep. Me hizo mucha gracia que salimos del asfalto y dijiste algo como: «eso es! levantando polvo».',
+    plan: 'hike',
+    seq: 2,
   },
   {
     id: 'madre-machete',
@@ -85,7 +93,9 @@ const extras: Place[] = [
     lng: -4.007053,
     label: 'La llamada a tu madre',
     kicker: 'El Hike',
-    body: 'Aquí llamaste a tu madre para decirle que estabas con dos desconocidos que tienen un MACHETE en el coche y que no íbamos a tener cobertura en unas horas.',
+    body: 'Aquí hiciste la llamada a tu madre para decirle que estabas con dos desconocidos que tienen un MACHETE en el coche y que no íbamos a tener cobertura en unas horas.',
+    plan: 'hike',
+    seq: 1,
   },
   {
     id: 'cachibache',
@@ -94,6 +104,8 @@ const extras: Place[] = [
     label: 'El Cachibache',
     kicker: 'El Hike',
     body: 'El Cachibache. Aquí surgió la idea de La Conclusión.',
+    plan: 'hike',
+    seq: 6,
     links: [{ section: 'conclusion', label: 'Ir a La Conclusión' }],
   },
   {
@@ -102,7 +114,9 @@ const extras: Place[] = [
     lng: -3.992104,
     label: '15 minutos de piedras',
     kicker: 'El Hike',
-    body: 'Estuvimos lanzando piedras 15 minutos al río. Tú tiraste la primera.',
+    body: 'Estuvimos aquí como 15 minutos lanzando piedras al río. Tú culpa, nosotros no pudimos controlarnos ​😶‍🌫️​',
+    plan: 'hike',
+    seq: 5,
   },
   {
     id: 'picnic-manguitos',
@@ -110,7 +124,9 @@ const extras: Place[] = [
     lng: -3.988455,
     label: 'Picnic de manguitos',
     kicker: 'El Hike',
-    body: 'Picnic riquísimo con manguitos de Mercadona.',
+    body: 'Picnic riquísimo con manguitos de Mercadona a orillas del río.',
+    plan: 'hike',
+    seq: 4,
   },
   {
     id: 'nieve',
@@ -119,6 +135,8 @@ const extras: Place[] = [
     label: 'La nieve',
     kicker: 'El Hike',
     body: 'Tocamos la nieve y nos empapamos un poco.',
+    plan: 'hike',
+    seq: 7,
   },
   {
     id: 'casi-al-rio',
@@ -127,6 +145,8 @@ const extras: Place[] = [
     label: 'Casi al río',
     kicker: 'El Hike',
     body: 'Casi te caes al río. Nunca he pasado tanto miedo.',
+    plan: 'hike',
+    seq: 3,
   },
   {
     id: 'macha',
@@ -135,6 +155,8 @@ const extras: Place[] = [
     label: 'Tu Macha',
     kicker: 'Madrid',
     body: 'Aquí me dejaste probar tu Macha. Y sí, sabe a pasto.',
+    plan: 'madrid-norte',
+    seq: 3,
   },
   {
     id: 'asturiano',
@@ -142,7 +164,9 @@ const extras: Place[] = [
     lng: -3.657206,
     label: 'Horicios asturianos',
     kicker: 'Madrid',
-    body: 'Aquí cenamos unos horicios en el restaurante asturiano.',
+    body: 'Cenita de horicios en el restaurante asturiano.',
+    plan: 'madrid-norte',
+    seq: 4,
   },
   {
     id: 'ataque-tos',
@@ -150,7 +174,9 @@ const extras: Place[] = [
     lng: -3.661061,
     label: 'El ataque de tos',
     kicker: 'Madrid',
-    body: 'Aquí me dio un ataque de tos horrible.',
+    body: 'Me dio un ataque de tos horrible. Gracias por tu paciencia ese día ​😂​',
+    plan: 'madrid-norte',
+    seq: 5,
   },
   {
     id: 'granizados-torreznos',
@@ -158,7 +184,9 @@ const extras: Place[] = [
     lng: -4.345886,
     label: 'Granizados y torreznos',
     kicker: 'San Juan',
-    body: 'Nos tomamos unos granizados, cenamos y me cortaste los torreznos.',
+    body: 'Nos tomamos unos granizados, cenamos y me cortaste los torreznos ​🫶​',
+    plan: 'san-juan',
+    seq: 1,
   },
   {
     id: 'playita-vip',
@@ -167,6 +195,8 @@ const extras: Place[] = [
     label: 'La playita VIP',
     kicker: 'San Juan',
     body: 'La playita VIP de Madrid, en el pantano de San Juan. Ese barquito quedó increíble.',
+    plan: 'san-juan',
+    seq: 2,
   },
   {
     id: 'jeep-piedras',
@@ -174,7 +204,9 @@ const extras: Place[] = [
     lng: -4.330433,
     label: 'Atardecer en el techo',
     kicker: 'San Juan',
-    body: 'Subimos el jeep a unas piedras y vimos el atardecer en el techo del coche.',
+    body: 'Subimos el jeep a unas piedras y vimos el atardecer en el techo del coche. (Aún no me has enviado esos videos ​🫠​)',
+    plan: 'san-juan',
+    seq: 3,
   },
   {
     id: 'atico-torre',
@@ -183,6 +215,8 @@ const extras: Place[] = [
     label: 'El ático de mi torre',
     kicker: 'Madrid',
     body: 'Tu vídeo espectacular en el ático de mi torre.',
+    plan: 'rooftop',
+    seq: 1,
   },
   {
     id: 'mexicana-apuesta',
@@ -191,6 +225,8 @@ const extras: Place[] = [
     label: 'La apuesta mexicana',
     kicker: 'Madrid',
     body: 'Comida mexicana rica rica que no te convenció, pero ganaste la apuesta: el camarero no era mexicano.',
+    plan: 'rooftop',
+    seq: 2,
   },
 ];
 
@@ -204,6 +240,8 @@ const fromStory: Place[] = storyBeats
     kicker: beat.title,
     body: beat.lead,
     storyId: beat.id,
+    plan: beat.id === 'cabras' ? 'madrid-norte' : undefined,
+    seq: beat.id === 'cabras' ? 2 : undefined,
     links: [
       { section: 'historia', label: 'Ver en Historia', focus: beat.id },
       { section: 'investigacion', label: 'Ver expediente', focus: beat.id },
@@ -227,4 +265,32 @@ export function placeForSlide(beatId: string, depth: number) {
 
 export function placeForStory(storyId: string) {
   return placeForSlide(storyId, 0) ?? places.find((p) => p.storyId === storyId || p.id === storyId);
+}
+
+export const PLAN_ROUTE: Record<
+  PlacePlan,
+  { color: string; mark: string }
+> = {
+  hike: { color: '#f3ead8', mark: '#f3ead8' },
+  'san-juan': { color: '#e8b86d', mark: '#e8b86d' },
+  'madrid-norte': { color: '#c9a08a', mark: '#c9a08a' },
+  rooftop: { color: '#d8c4ae', mark: '#d8c4ae' },
+};
+
+export function planRoutes() {
+  const groups = new Map<PlacePlan, Place[]>();
+  for (const place of places) {
+    if (!place.plan) continue;
+    const list = groups.get(place.plan) ?? [];
+    list.push(place);
+    groups.set(place.plan, list);
+  }
+  return [...groups.entries()]
+    .map(([plan, pts]) => ({
+      plan,
+      positions: pts
+        .sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0))
+        .map((p) => [p.lat, p.lng] as [number, number]),
+    }))
+    .filter((route) => route.positions.length > 1);
 }

@@ -27,6 +27,9 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /v-site/
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_DRIVE_FOLDER_ID: ${{ secrets.VITE_DRIVE_FOLDER_ID }}
+          VITE_ARCHIVE_EMAILS: ${{ secrets.VITE_ARCHIVE_EMAILS }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
