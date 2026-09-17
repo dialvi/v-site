@@ -17,19 +17,36 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: github-pages
+    env:
+      VITE_BASE: /v-site/
+      VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+      VITE_DRIVE_FOLDER_ID: ${{ secrets.VITE_DRIVE_FOLDER_ID }}
+      VITE_ARCHIVE_EMAILS: ${{ secrets.VITE_ARCHIVE_EMAILS }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check Google env
+        run: |
+          missing=0
+          for name in VITE_GOOGLE_CLIENT_ID VITE_DRIVE_FOLDER_ID VITE_ARCHIVE_EMAILS; do
+            eval "val=\${$name}"
+            if [ -z "$val" ]; then
+              echo "$name is empty"
+              missing=1
+            else
+              echo "$name is set"
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Put the three values in Settings → Secrets → Actions, or in the github-pages environment secrets."
+            exit 1
+          fi
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run build
-        env:
-          VITE_BASE: /v-site/
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-          VITE_DRIVE_FOLDER_ID: ${{ secrets.VITE_DRIVE_FOLDER_ID }}
-          VITE_ARCHIVE_EMAILS: ${{ secrets.VITE_ARCHIVE_EMAILS }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
