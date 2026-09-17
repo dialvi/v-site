@@ -186,7 +186,7 @@ export async function signInToGoogle(opts?: { silent?: boolean; hint?: string })
   const { allow } = archiveConfig();
   if (allow.length > 0 && !allow.includes(email)) {
     signOutGoogle(accessToken);
-    throw new Error('forbidden-email');
+    throw new Error(`forbidden-email:${email}`);
   }
 
   return { accessToken, email };

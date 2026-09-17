@@ -275,8 +275,11 @@ function MediaThumb({ item }: { item: DriveMedia }) {
 }
 
 function messageFor(code: string) {
-  if (code === 'forbidden-email') {
-    return 'Has entrado con una cuenta que no está en la lista. En Google elige la misma Gmail que en el PC.';
+  if (code.startsWith('forbidden-email')) {
+    const used = code.includes(':') ? code.slice(code.indexOf(':') + 1) : '';
+    return used
+      ? `Has entrado con ${used}. Esa Gmail no está en la lista del secret.`
+      : 'Has entrado con una cuenta que no está en la lista. En Google elige la misma Gmail que en el PC.';
   }
   if (code === 'forbidden-folder' || code === 'forbidden') {
     return 'Google no deja leer la carpeta con esa cuenta. Compártela en Drive como lectora.';
