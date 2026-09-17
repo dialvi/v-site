@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
 import {
@@ -41,9 +41,10 @@ function DriveVault() {
   const [items, setItems] = useState<DriveMedia[]>(live?.items ?? []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewer, setViewer] = useState<DriveMedia | null>(null);
+  const [index, setIndex] = useState<number | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(Boolean(configured && !live));
+  const viewer = index !== null ? items[index] ?? null : null;
 
   useEffect(() => {
     if (email && token) rememberSession({ email, token, items });
@@ -97,15 +98,16 @@ function DriveVault() {
     setEmail(null);
     setToken(null);
     setItems([]);
-    setViewer(null);
+    setIndex(null);
   };
 
-  const openItem = async (item: DriveMedia) => {
+  const openAt = async (at: number) => {
+    if (!items.length) return;
+    const next = ((at % items.length) + items.length) % items.length;
+    const item = items[next];
     haptic('light');
-    if (item.src && !item.src.includes('/preview')) {
-      setViewer(item);
-      return;
-    }
+    setIndex(next);
+    if (item.src && !item.src.includes('/preview')) return;
     if (!token) return;
     setLoadingId(item.id);
     setError(null);
@@ -113,11 +115,11 @@ function DriveVault() {
       const src = await fetchDriveFile(token, item.id);
       const loaded = { ...item, src };
       setItems((prev) => prev.map((entry) => (entry.id === item.id ? loaded : entry)));
-      setViewer(loaded);
     } catch (err) {
       console.error(err);
       if (item.kind === 'video') {
-        setViewer({ ...item, src: `https://drive.google.com/file/d/${item.id}/preview` });
+        const loaded = { ...item, src: `https://drive.google.com/file/d/${item.id}/preview` };
+        setItems((prev) => prev.map((entry) => (entry.id === item.id ? loaded : entry)));
         return;
       }
       setError('No se ha podido abrir el archivo.');
@@ -128,6 +130,9 @@ function DriveVault() {
 
   return (
     <section>
+      <p className="mb-6 font-display text-[1.45rem] italic leading-tight text-paper/80">
+        Para que los planecitos no llenen tu iCloud
+      </p>
       {!configured && (
         <p className="rounded-2xl border border-paper/10 px-4 py-4 text-[14px] leading-relaxed text-paper/45">
           Aún no está conectado. Falta el acceso de Google.
@@ -174,7 +179,7 @@ function DriveVault() {
             <li key={item.id}>
               <button
                 type="button"
-                onClick={() => void openItem(item)}
+                onClick={() => void openAt(items.findIndex((entry) => entry.id === item.id))}
                 className="relative block w-full overflow-hidden rounded-xl border border-paper/10"
               >
                 <MediaThumb item={item} />
@@ -196,44 +201,174 @@ function DriveVault() {
         </ul>
       )}
 
-      {viewer?.src && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/92 px-4"
-          onClick={() => setViewer(null)}
+      {viewer && index !== null && (
+        <MediaViewer
+          item={viewer}
+          index={index}
+          total={items.length}
+          loading={loadingId === viewer.id}
+          onClose={() => setIndex(null)}
+          onPrev={() => void openAt(index - 1)}
+          onNext={() => void openAt(index + 1)}
+        />
+      )}
+    </section>
+  );
+}
+
+function MediaViewer({
+  item,
+  index,
+  total,
+  loading,
+  onClose,
+  onPrev,
+  onNext,
+}: {
+  item: DriveMedia;
+  index: number;
+  total: number;
+  loading: boolean;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+}) {
+  const start = useRef<{ x: number; y: number } | null>(null);
+  const [drag, setDrag] = useState(0);
+  const src = item.src;
+  const preview = src && !src.includes('/preview') ? src : item.thumb;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'ArrowRight') onNext();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose, onPrev, onNext]);
+
+  const finish = (e: { clientX: number; clientY: number; target: EventTarget | null }) => {
+    if (!start.current) return;
+    const dx = e.clientX - start.current.x;
+    const dy = e.clientY - start.current.y;
+    start.current = null;
+    setDrag(0);
+    if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) onNext();
+      else onPrev();
+      return;
+    }
+    const el = e.target as HTMLElement | null;
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8 && el && !el.closest('img, video, iframe, button')) {
+      onClose();
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex touch-none flex-col bg-ink/92"
+      style={{ touchAction: 'none' }}
+      onPointerDown={(e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        start.current = { x: e.clientX, y: e.clientY };
+        setDrag(0);
+      }}
+      onPointerMove={(e) => {
+        if (!start.current) return;
+        setDrag(e.clientX - start.current.x);
+      }}
+      onPointerUp={(e) => finish(e)}
+      onPointerCancel={() => {
+        start.current = null;
+        setDrag(0);
+      }}
+    >
+      <div className="safe-pad flex items-center justify-between">
+        <button
+          type="button"
+          className="rounded-full border border-paper/15 bg-ink/55 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.22em] text-paper/75"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          onPointerDown={(e) => e.stopPropagation()}
         >
-          {viewer.kind === 'video' && viewer.src.includes('/preview') ? (
+          cerrar
+        </button>
+        <p className="text-[11px] uppercase tracking-[0.22em] text-paper/45">
+          {index + 1} / {total}
+        </p>
+      </div>
+
+      <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pb-[calc(var(--safe-bottom)+1.5rem)]">
+        <div
+          className="flex max-h-full max-w-full items-center justify-center"
+          style={{ transform: `translateX(${drag * 0.35}px)` }}
+        >
+          {item.kind === 'video' && src?.includes('/preview') ? (
             <iframe
-              title={viewer.name}
-              src={viewer.src}
+              title={item.name}
+              src={src}
               allow="autoplay; encrypted-media"
               allowFullScreen
-              className="h-[70vh] w-full max-w-[52rem] rounded-2xl border-0 bg-ink"
-              onClick={(e) => e.stopPropagation()}
+              className="pointer-events-none h-[70vh] w-[min(100%,52rem)] rounded-2xl border-0 bg-ink"
             />
-          ) : viewer.kind === 'video' ? (
+          ) : item.kind === 'video' && src ? (
             <video
-              src={viewer.src}
+              src={src}
               controls
               autoPlay
               playsInline
-              className="max-h-[86vh] max-w-full rounded-2xl"
-              onClick={(e) => e.stopPropagation()}
+              className="max-h-[78vh] max-w-full rounded-2xl"
+              onPointerDown={(e) => e.stopPropagation()}
             />
-          ) : (
+          ) : preview ? (
             <img
-              src={viewer.src}
+              src={preview}
               alt=""
-              className="max-h-[86vh] max-w-full rounded-2xl object-contain"
+              className="max-h-[78vh] max-w-full rounded-2xl object-contain"
               onError={(e) => {
-                if (viewer.thumb && e.currentTarget.src !== viewer.thumb) {
-                  e.currentTarget.src = viewer.thumb;
-                }
+                if (item.thumb && e.currentTarget.src !== item.thumb) e.currentTarget.src = item.thumb;
               }}
             />
+          ) : (
+            <p className="text-[13px] uppercase tracking-[0.18em] text-paper/40">cargando</p>
           )}
         </div>
-      )}
-    </section>
+
+        {loading && (
+          <p className="pointer-events-none absolute bottom-8 text-[11px] uppercase tracking-[0.18em] text-paper/50">
+            cargando
+          </p>
+        )}
+
+        {total > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label="Anterior"
+              className="absolute left-0 top-0 h-full w-[22%] max-w-[6rem]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrev();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+            <button
+              type="button"
+              aria-label="Siguiente"
+              className="absolute right-0 top-0 h-full w-[22%] max-w-[6rem]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onNext();
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
