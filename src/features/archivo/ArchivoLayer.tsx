@@ -238,7 +238,9 @@ function DriveVault() {
 }
 
 function MediaThumb({ item }: { item: DriveMedia }) {
-  const candidates = [item.thumb, item.src].filter((src): src is string => Boolean(src) && !src.includes('/preview'));
+  const candidates = [item.thumb, item.src].filter(
+    (src): src is string => typeof src === 'string' && !src.includes('/preview'),
+  );
   const [index, setIndex] = useState(0);
   const preview = candidates[index];
 
