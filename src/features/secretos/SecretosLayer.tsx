@@ -24,15 +24,15 @@ export function SecretosLayer({ onBack }: Props) {
   return (
     <div className="absolute inset-0 z-20 flex flex-col bg-ink/90 backdrop-blur-md animate-depth-in">
       <header className="safe-pad flex items-center justify-between pb-2">
-        <BackChip onClick={secret ? () => setOpen(null) : onBack} label={secret ? 'secretos' : 'universo'} />
-        <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">Privado</p>
+        <BackChip onClick={secret ? () => setOpen(null) : onBack} label={secret ? 'confidencial' : 'universo'} />
+        <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">Confidencial</p>
       </header>
 
       {secret ? (
         <SecretDetail secret={secret} />
       ) : (
         <div className="scroll-y flex-1 px-6 pb-[calc(var(--safe-bottom)+2.5rem)]">
-          <h2 className="font-display text-[1.9rem] italic leading-tight text-paper">Mis secretos</h2>
+          <h2 className="font-display text-[1.9rem] italic leading-tight text-paper">Confidencial</h2>
           <p className="mt-4 max-w-[32ch] text-[14px] leading-relaxed text-paper/50">{secretsIntro}</p>
           <ul className="mt-10 space-y-3">
             {secrets.map((item) => {

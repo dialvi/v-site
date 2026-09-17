@@ -279,6 +279,23 @@
   animation: sky-shoot ease-in infinite;
 }
 
+.sky-floater {
+  display: block;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(243, 234, 216, 0.28));
+  animation: sky-wobble 5.5s ease-in-out infinite;
+}
+
+@keyframes sky-wobble {
+  0%,
+  100% {
+    rotate: -12deg;
+  }
+  50% {
+    rotate: 16deg;
+  }
+}
+
 @keyframes sky-twinkle {
   0%,
   100% {

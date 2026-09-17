@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { phraseMatches, rememberUnlock } from '@/lib/gate';
+import { pingSession } from '@/lib/watch';
 import { haptic } from '@/lib/haptics';
 import { Starfield } from '@/components/Starfield';
 import { Grain } from '@/components/Grain';
@@ -21,6 +22,7 @@ export function Gate({ onUnlock }: Props) {
     }
     haptic('success');
     rememberUnlock();
+    pingSession('gate');
     onUnlock();
   };
 

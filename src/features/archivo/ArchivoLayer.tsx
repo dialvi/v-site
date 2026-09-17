@@ -131,7 +131,7 @@ function DriveVault() {
   return (
     <section>
       <p className="mb-6 font-display text-[1.45rem] italic leading-tight text-paper/80">
-        Para que los planecitos no llenen tu iCloud
+        Para que los recuerdos no llenen tu iCloud
       </p>
       {!configured && (
         <p className="rounded-2xl border border-paper/10 px-4 py-4 text-[14px] leading-relaxed text-paper/45">

@@ -16,12 +16,23 @@ type Planet = {
   ring?: boolean;
 };
 
+type Floater = {
+  emoji: string;
+  cx: string;
+  cy: string;
+  rx: number;
+  ry: number;
+  size: number;
+  duration: number;
+  delay: number;
+};
+
 const planets: Planet[] = [
   {
     cx: '16%',
     cy: '78%',
     rx: 150,
-    ry: 72,
+    ry: 118,
     size: 11,
     duration: 52,
     delay: -18,
@@ -32,7 +43,7 @@ const planets: Planet[] = [
     cx: '82%',
     cy: '20%',
     rx: 190,
-    ry: 96,
+    ry: 154,
     size: 18,
     duration: 78,
     delay: -40,
@@ -44,7 +55,7 @@ const planets: Planet[] = [
     cx: '72%',
     cy: '84%',
     rx: 120,
-    ry: 58,
+    ry: 96,
     size: 9,
     duration: 38,
     delay: -8,
@@ -55,12 +66,35 @@ const planets: Planet[] = [
     cx: '22%',
     cy: '18%',
     rx: 210,
-    ry: 88,
+    ry: 168,
     size: 14,
     duration: 96,
     delay: -55,
     fill: 'radial-gradient(circle at 34% 30%, #c8d0dc 0%, #6a788c 48%, #2a303c 100%)',
     glow: 'rgba(140, 160, 180, 0.32)',
+  },
+];
+
+const floaters: Floater[] = [
+  {
+    emoji: '🐐',
+    cx: '38%',
+    cy: '42%',
+    rx: 210,
+    ry: 168,
+    size: 22,
+    duration: 58,
+    delay: -14,
+  },
+  {
+    emoji: '🇲🇽',
+    cx: '68%',
+    cy: '58%',
+    rx: 170,
+    ry: 140,
+    size: 20,
+    duration: 44,
+    delay: -26,
   },
 ];
 
@@ -156,7 +190,7 @@ export function Starfield() {
           top: '10%',
           width: 520,
           height: 520,
-          ['--squash' as string]: 0.34,
+          ['--squash' as string]: 0.78,
         }}
       >
         <div
@@ -186,6 +220,48 @@ export function Starfield() {
           </span>
         </div>
       </div>
+
+      {floaters.map((f) => (
+        <div
+          key={f.emoji}
+          className="sky-orbit-host"
+          style={{
+            left: f.cx,
+            top: f.cy,
+            width: f.rx * 2,
+            height: f.rx * 2,
+            ['--squash' as string]: f.ry / f.rx,
+          }}
+        >
+          <div
+            className="sky-orbit-spin"
+            style={{
+              animationDuration: `${f.duration}s`,
+              animationDelay: `${f.delay}s`,
+              animationPlayState: reduced ? 'paused' : 'running',
+            }}
+          >
+            <span
+              className="sky-planet-wrap"
+              style={{
+                animationDuration: `${f.duration}s`,
+                animationDelay: `${f.delay}s`,
+                animationPlayState: reduced ? 'paused' : 'running',
+              }}
+            >
+              <span
+                className="sky-floater"
+                style={{
+                  fontSize: f.size,
+                  animationPlayState: reduced ? 'paused' : 'running',
+                }}
+              >
+                {f.emoji}
+              </span>
+            </span>
+          </div>
+        </div>
+      ))}
 
       {!reduced &&
         shoots.map((s, i) => (

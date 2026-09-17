@@ -18,11 +18,11 @@ export const nodes = {
   title: { x: 830, y: 995 },
   historia: { x: 560, y: 720 },
   archivo: { x: 1040, y: 760 },
+  lista: { x: 600, y: 1220 },
   investigacion: { x: 600, y: 1220 },
   mapa: { x: 1120, y: 1280 },
-  lista: { x: 1560, y: 1560 },
-  secretos: { x: 1900, y: 1860 },
-  conclusion: { x: 2160, y: 2180 },
+  secretos: { x: 1580, y: 1500 },
+  conclusion: { x: 1920, y: 1960 },
 };
 
 export const sectionNodes: {
@@ -35,21 +35,19 @@ export const sectionNodes: {
   delay: number;
 }[] = [
   { id: 'historia', ...nodes.historia, kicker: '01', label: 'Historia', glyph: '✦', delay: 80 },
-  { id: 'investigacion', ...nodes.investigacion, kicker: 'exp.', label: 'Archivo de investigación', glyph: '⌘', delay: 160 },
+  { id: 'lista', ...nodes.lista, kicker: 'vale', label: 'La lista', glyph: '▴', delay: 160 },
   { id: 'mapa', ...nodes.mapa, kicker: 'sitios', label: 'Mapa', glyph: '⌖', delay: 240 },
   { id: 'archivo', ...nodes.archivo, kicker: '03', label: 'Archivo', glyph: '◎', delay: 320 },
-  { id: 'lista', ...nodes.lista, kicker: 'vale', label: 'La lista', glyph: '▴', delay: 400 },
-  { id: 'secretos', ...nodes.secretos, kicker: 'privado', label: 'Mis secretos', glyph: '◇', delay: 480 },
+  { id: 'secretos', ...nodes.secretos, kicker: 'privado', label: 'Confidencial', glyph: '◇', delay: 480 },
   { id: 'conclusion', ...nodes.conclusion, kicker: 'fin', label: 'La conclusión', glyph: '—', delay: 560 },
 ];
 
 export const constellationLines: [keyof typeof nodes, keyof typeof nodes][] = [
-  ['historia', 'investigacion'],
-  ['investigacion', 'mapa'],
+  ['historia', 'lista'],
+  ['lista', 'mapa'],
   ['mapa', 'archivo'],
   ['archivo', 'historia'],
-  ['mapa', 'lista'],
-  ['lista', 'secretos'],
+  ['mapa', 'secretos'],
   ['secretos', 'conclusion'],
 ];
 
@@ -79,7 +77,7 @@ export function viewFor(id: ViewId, vw = 390, vh = 844): CameraState {
         scale: Math.min(1.22, (vw * 0.78) / 268),
       };
     case 'map':
-      return fit(420, 1720, 560, 1700, vw, vh, 0.92);
+      return fit(420, 1980, 540, 2020, vw, vh, 0.92);
     case 'historia':
       return { x: nodes.historia.x, y: nodes.historia.y, scale: Math.min(2.35, vw / 160) };
     case 'lista':

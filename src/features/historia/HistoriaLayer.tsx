@@ -3,6 +3,7 @@ import { storyBeats, type StoryBeat, type StoryDetail } from '@/content/story';
 import { encodeStoryFocus, parseStoryFocus, placeForSlide } from '@/content/places';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
+import { pingHistoriaLeave, pingHistoriaMap, pingHistoriaMove, pingHistoriaOpen } from '@/lib/watch';
 
 type Props = {
   onBack: () => void;
@@ -41,6 +42,25 @@ export function HistoriaLayer({ onBack, backLabel, focusId, onOpenMap }: Props) 
   const scroller = useRef<HTMLDivElement>(null);
   const { beatIndex: start, depth: startDepth } = parseStoryFocus(focusId);
   const [index, setIndex] = useState(start);
+  const cursor = useRef({ beat: start, depth: startDepth, at: Date.now() });
+  const opened = useRef(false);
+  const left = useRef(false);
+
+  const moveTo = (beat: number, depth: number) => {
+    const c = cursor.current;
+    if (c.beat === beat && c.depth === depth) return;
+    if (opened.current) {
+      pingHistoriaMove(c.beat, c.depth, beat, depth, Math.round((Date.now() - c.at) / 1000));
+    }
+    cursor.current = { beat, depth, at: Date.now() };
+  };
+
+  const finish = () => {
+    if (left.current) return;
+    left.current = true;
+    const c = cursor.current;
+    pingHistoriaLeave(c.beat, c.depth, Math.round((Date.now() - c.at) / 1000));
+  };
 
   useEffect(() => {
     const el = scroller.current;
@@ -51,10 +71,24 @@ export function HistoriaLayer({ onBack, backLabel, focusId, onOpenMap }: Props) 
     return () => cancelAnimationFrame(id);
   }, [start]);
 
+  useEffect(() => {
+    pingHistoriaOpen(start, startDepth);
+    opened.current = true;
+    cursor.current = { beat: start, depth: startDepth, at: Date.now() };
+    return () => {
+      finish();
+    };
+  }, [start, startDepth]);
+
+  const leave = () => {
+    finish();
+    onBack();
+  };
+
   return (
     <div className="absolute inset-0 z-20 flex flex-col bg-ink/88 backdrop-blur-md animate-depth-in">
       <header className="safe-pad flex items-center justify-between pb-2">
-        <BackChip onClick={onBack} label={backLabel} />
+        <BackChip onClick={leave} label={backLabel} />
         <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">Historia</p>
       </header>
 
@@ -74,7 +108,16 @@ export function HistoriaLayer({ onBack, backLabel, focusId, onOpenMap }: Props) 
             isLast={i === storyBeats.length - 1}
             horizontal={scroller}
             restoreDepth={i === start ? startDepth : 0}
-            onOpenMap={onOpenMap}
+            active={i === index}
+            onDepth={(depth) => moveTo(i, depth)}
+            onOpenMap={
+              onOpenMap
+                ? (placeId, storyFocus) => {
+                    pingHistoriaMap(i, cursor.current.beat === i ? cursor.current.depth : 0);
+                    onOpenMap(placeId, storyFocus);
+                  }
+                : undefined
+            }
           />
         ))}
       </div>
@@ -99,17 +142,25 @@ function BeatColumn({
   isLast,
   horizontal,
   restoreDepth,
+  active,
+  onDepth,
   onOpenMap,
 }: {
   beat: StoryBeat;
   isLast: boolean;
   horizontal: RefObject<HTMLDivElement>;
   restoreDepth: number;
+  active: boolean;
+  onDepth: (depth: number) => void;
   onOpenMap?: (placeId: string, storyFocus: string) => void;
 }) {
   const vertical = useRef<HTMLDivElement>(null);
   const [depth, setDepth] = useState(restoreDepth);
   const slides = beat.details.length;
+
+  useEffect(() => {
+    if (active) onDepth(depth);
+  }, [active, depth, onDepth]);
 
   useEffect(() => {
     const v = vertical.current;

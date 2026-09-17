@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCamera } from '@/hooks/useCamera';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { haptic } from '@/lib/haptics';
+import { pingSection, pingUniverse } from '@/lib/watch';
 import { useUniverseState } from '@/state/UniverseState';
 import { Starfield } from '@/components/Starfield';
 import { Grain } from '@/components/Grain';
@@ -31,7 +32,7 @@ function viewport() {
 
 function hopLabel(section: SectionId) {
   if (section === 'investigacion') return 'investigación';
-  if (section === 'conclusion') return 'conclusión';
+  if (section === 'secretos') return 'confidencial';
   return section;
 }
 
@@ -76,6 +77,7 @@ export function Universe() {
     }
     setJumpFocus(focus);
     setView(next);
+    pingSection(next);
     if (instant) {
       setLayer(next);
       flyTo(viewFor(next, w, h), reduced ? 1 : 700);
@@ -88,6 +90,7 @@ export function Universe() {
     const { w, h } = viewport();
     haptic('medium');
     setEntered(true);
+    pingUniverse();
     flyTo(viewFor('map', w, h), reduced ? 1 : 1400, () => {
       setView('map');
     });
@@ -276,7 +279,7 @@ function TitleMark({ entered, onOpenIntro }: { entered: boolean; onOpenIntro: ()
       }
     >
       {entered ? (
-        <p className="whitespace-nowrap px-[0.45em] font-display text-[2.65rem] italic leading-none text-paper">
+        <p className="whitespace-nowrap px-[0.45em] font-display text-[1.45rem] italic leading-none text-paper">
           Valeria 😊
         </p>
       ) : (
