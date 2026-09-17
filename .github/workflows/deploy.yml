@@ -28,7 +28,7 @@ jobs:
       - name: Check Google env
         run: |
           missing=0
-          for name in VITE_GOOGLE_CLIENT_ID VITE_DRIVE_FOLDER_ID VITE_ARCHIVE_EMAILS; do
+          for name in VITE_GOOGLE_CLIENT_ID VITE_DRIVE_FOLDER_ID; do
             eval "val=\${$name}"
             if [ -z "$val" ]; then
               echo "$name is empty"
@@ -38,7 +38,7 @@ jobs:
             fi
           done
           if [ "$missing" -ne 0 ]; then
-            echo "Put the three values in Settings → Secrets → Actions, or in the github-pages environment secrets."
+            echo "Put VITE_GOOGLE_CLIENT_ID and VITE_DRIVE_FOLDER_ID in Settings → Secrets → Actions, or in the github-pages environment secrets."
             exit 1
           fi
       - uses: actions/setup-node@v4

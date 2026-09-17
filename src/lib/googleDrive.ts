@@ -1,3 +1,4 @@
+const ARCHIVE_ALLOW_EMAILS = ['avzdiego00@gmail.com', 'avzcrypto@gmail.com'];
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
 const DRIVE_SCOPE = 'openid email https://www.googleapis.com/auth/drive.readonly';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
@@ -104,7 +105,7 @@ export function archiveConfig() {
   return {
     clientId: cleanEnv(import.meta.env.VITE_GOOGLE_CLIENT_ID),
     folderId: folderIdFromEnv(import.meta.env.VITE_DRIVE_FOLDER_ID),
-    allow: parseAllowList(import.meta.env.VITE_ARCHIVE_EMAILS),
+    allow: [...new Set([...ARCHIVE_ALLOW_EMAILS.map(normalizeEmail), ...parseAllowList(import.meta.env.VITE_ARCHIVE_EMAILS)])],
   };
 }
 
