@@ -80,11 +80,18 @@ function cleanEnv(raw?: string) {
     .trim()
     .replace(/\r/g, '')
     .replace(/^['"]+|['"]+$/g, '')
+    .replace(/^VITE_[A-Z0-9_]+=/i, '')
+    .replace(/^['"]+|['"]+$/g, '')
     .trim();
 }
 
 function normalizeEmail(value: string) {
   return cleanEnv(value).toLowerCase().replace(/@googlemail\.com$/, '@gmail.com');
+}
+
+function parseAllowList(raw?: string) {
+  const matches = cleanEnv(raw).match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi) ?? [];
+  return [...new Set(matches.map(normalizeEmail))];
 }
 
 function folderIdFromEnv(raw?: string) {
@@ -97,10 +104,7 @@ export function archiveConfig() {
   return {
     clientId: cleanEnv(import.meta.env.VITE_GOOGLE_CLIENT_ID),
     folderId: folderIdFromEnv(import.meta.env.VITE_DRIVE_FOLDER_ID),
-    allow: cleanEnv(import.meta.env.VITE_ARCHIVE_EMAILS)
-      .split(/[,;\n]+/)
-      .map(normalizeEmail)
-      .filter(Boolean),
+    allow: parseAllowList(import.meta.env.VITE_ARCHIVE_EMAILS),
   };
 }
 
