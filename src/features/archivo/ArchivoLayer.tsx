@@ -15,6 +15,7 @@ import {
   signOutGoogle,
   type DriveMedia,
 } from '@/lib/googleDrive';
+import { duckUniverseTheme, ensureUniverseTheme } from '@/lib/universeTheme';
 import { pingArchivoComment, pingArchivoEnter, pingArchivoLeave, pingArchivoLike, pingArchivoPhoto, pingArchivoPhotoClose } from '@/lib/watch';
 
 type Props = {
@@ -109,7 +110,46 @@ function DriveVault({
   const [index, setIndex] = useState<number | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(Boolean(configured && !live));
+  const loads = useRef(new Map<string, Promise<string | undefined>>());
   const viewer = index !== null ? items[index] ?? null : null;
+
+  const playableSrc = (item?: DriveMedia) =>
+    Boolean(item?.src && !item.src.includes('/preview'));
+
+  const ensureSrc = (item: DriveMedia) => {
+    if (playableSrc(item)) return Promise.resolve(item.src);
+    if (!token) return Promise.resolve(undefined);
+    const cached = loads.current.get(item.id);
+    if (cached) return cached;
+    const pending = fetchDriveFile(token, item.id)
+      .then((src) => {
+        setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
+        return src;
+      })
+      .catch((err) => {
+        console.error(err);
+        if (item.kind === 'video') {
+          const src = `https://drive.google.com/file/d/${item.id}/preview`;
+          setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
+          return src;
+        }
+        loads.current.delete(item.id);
+        throw err;
+      });
+    loads.current.set(item.id, pending);
+    return pending;
+  };
+
+  const preloadAround = (at: number) => {
+    if (!items.length) return;
+    const seen = new Set<string>([items[at]?.id]);
+    for (const offset of [1, -1, 2]) {
+      const item = items[((at + offset) % items.length + items.length) % items.length];
+      if (!item || seen.has(item.id) || item.kind !== 'video' || playableSrc(item)) continue;
+      seen.add(item.id);
+      void ensureSrc(item).catch(() => undefined);
+    }
+  };
 
   useEffect(() => {
     onLooking(index !== null);
@@ -119,6 +159,8 @@ function DriveVault({
     closer.current = () => {
       if (index === null) return;
       pingArchivoPhotoClose();
+      duckUniverseTheme(false);
+      ensureUniverseTheme();
       setIndex(null);
     };
   }, [closer, index]);
@@ -185,26 +227,38 @@ function DriveVault({
     haptic('light');
     pingArchivoPhoto(how, next, item.kind);
     setIndex(next);
-    if (item.src && !item.src.includes('/preview')) return;
-    if (!token) return;
+    preloadAround(next);
+    if (playableSrc(item) || !token) return;
     setLoadingId(item.id);
     setError(null);
     try {
-      const src = await fetchDriveFile(token, item.id);
-      const loaded = { ...item, src };
-      setItems((prev) => prev.map((entry) => (entry.id === item.id ? loaded : entry)));
-    } catch (err) {
-      console.error(err);
-      if (item.kind === 'video') {
-        const loaded = { ...item, src: `https://drive.google.com/file/d/${item.id}/preview` };
-        setItems((prev) => prev.map((entry) => (entry.id === item.id ? loaded : entry)));
-        return;
-      }
+      await ensureSrc(item);
+    } catch {
       setError('No se ha podido abrir el archivo.');
     } finally {
-      setLoadingId(null);
+      setLoadingId((id) => (id === item.id ? null : id));
     }
   };
+
+  const primed: string[] = [];
+  if (index !== null && items.length > 1) {
+    const seen = new Set<string>();
+    for (const offset of [1, -1, 2]) {
+      const neighbor = items[((index + offset) % items.length + items.length) % items.length];
+      if (
+        !neighbor ||
+        neighbor.id === items[index]?.id ||
+        neighbor.kind !== 'video' ||
+        !playableSrc(neighbor) ||
+        !neighbor.src ||
+        seen.has(neighbor.src)
+      ) {
+        continue;
+      }
+      seen.add(neighbor.src);
+      primed.push(neighbor.src);
+    }
+  }
 
   return (
     <section>
@@ -293,8 +347,11 @@ function DriveVault({
               index={index}
               total={items.length}
               loading={loadingId === viewer.id}
+              primed={primed}
               onClose={() => {
                 pingArchivoPhotoClose();
+                duckUniverseTheme(false);
+                ensureUniverseTheme();
                 setIndex(null);
               }}
               onPrev={() => void openAt(index - 1, 'anterior')}
@@ -312,6 +369,7 @@ function MediaViewer({
   index,
   total,
   loading,
+  primed,
   onClose,
   onPrev,
   onNext,
@@ -320,6 +378,7 @@ function MediaViewer({
   index: number;
   total: number;
   loading: boolean;
+  primed: string[];
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -332,6 +391,7 @@ function MediaViewer({
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState({ s: 1, x: 0, y: 0 });
   const [ready, setReady] = useState(false);
+  const [muted, setMuted] = useState(true);
   const [notes, setNotes] = useState(loadNotes);
   const src = item.src;
   const preview = src && !src.includes('/preview') ? src : item.thumb;
@@ -340,6 +400,7 @@ function MediaViewer({
   const key = String(index);
   const liked = Boolean(notes.likes[key]);
   const zoomed = zoom.s > 1.04;
+  const videoSound = item.kind === 'video' && playable && !muted;
 
   const putZoom = (next: { s: number; x: number; y: number }) => {
     const s = clamp(next.s, MIN_ZOOM, MAX_ZOOM);
@@ -360,8 +421,18 @@ function MediaViewer({
 
   useEffect(() => {
     setReady(false);
+    setMuted(true);
     putZoom({ s: 1, x: 0, y: 0 });
   }, [item.id, src]);
+
+  useEffect(() => {
+    duckUniverseTheme(videoSound);
+    ensureUniverseTheme();
+    return () => {
+      duckUniverseTheme(false);
+      ensureUniverseTheme();
+    };
+  }, [videoSound, item.id]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -527,7 +598,9 @@ function MediaViewer({
                 src={src}
                 controls={!zoomed}
                 autoPlay
+                muted={muted}
                 playsInline
+                preload="auto"
                 className={
                   ready
                     ? 'max-h-full max-w-full'
@@ -535,10 +608,57 @@ function MediaViewer({
                 }
                 style={ready ? mediaStyle : undefined}
                 onCanPlay={() => setReady(true)}
-                onPlaying={() => setReady(true)}
+                onPlaying={() => {
+                  setReady(true);
+                  ensureUniverseTheme();
+                }}
+                onPlay={() => ensureUniverseTheme()}
+                onPause={() => ensureUniverseTheme()}
+                onEnded={() => {
+                  setMuted(true);
+                  duckUniverseTheme(false);
+                  ensureUniverseTheme();
+                }}
+                onVolumeChange={(e) => {
+                  const el = e.currentTarget;
+                  const silent = el.muted || el.volume === 0;
+                  setMuted(silent);
+                  duckUniverseTheme(!silent);
+                  ensureUniverseTheme();
+                }}
               />
             )}
+            {primed.map((url) => (
+              <video
+                key={url}
+                src={url}
+                preload="auto"
+                muted
+                playsInline
+                className="pointer-events-none absolute h-px w-px opacity-0"
+              />
+            ))}
             {waiting && <MediaWait kind="video" poster={item.thumb} />}
+            {playable && ready && (
+              <button
+                type="button"
+                data-skip="1"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  haptic('light');
+                  setMuted((on) => {
+                    const next = !on;
+                    duckUniverseTheme(!next);
+                    ensureUniverseTheme();
+                    return next;
+                  });
+                }}
+                className="absolute left-3 top-3 z-20 rounded-full border border-paper/20 bg-ink/70 px-3 py-1.5 font-display text-[12px] italic text-paper/80"
+              >
+                {muted ? 'sin sonido' : 'sonido on'}
+              </button>
+            )}
           </>
         ) : preview ? (
           <img
