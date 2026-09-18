@@ -10,8 +10,8 @@ type Props = {
 
 export function ConclusionLayer({ onBack, backLabel, onUnlock, alreadyUnlocked }: Props) {
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-ink/90 backdrop-blur-md animate-depth-in">
-      <header className="safe-pad flex items-center justify-between pb-2">
+    <div className="absolute inset-0 z-20 flex min-h-0 flex-col overflow-hidden bg-ink/90 backdrop-blur-md animate-depth-in">
+      <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-[calc(var(--safe-top)+1.75rem)]">
         <BackChip onClick={onBack} label={backLabel} />
         <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">La conclusión</p>
       </header>
@@ -20,7 +20,7 @@ export function ConclusionLayer({ onBack, backLabel, onUnlock, alreadyUnlocked }
           Esto es solo el comienzo.
         </p>
         <p className="mt-8 text-[16px] leading-relaxed text-paper/70">
-          Un vale para un año: cada dos semanas, una casilla. Dos planes. Tú eliges.
+          Un vale: el 20 de septiembre cae el siguiente, y a partir de ahí cada 15 días. Dos planes. Tú eliges.
         </p>
         <p className="mt-5 text-[16px] leading-relaxed text-paper/70">
           Y, por desgracia para ti,

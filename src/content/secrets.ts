@@ -1,30 +1,95 @@
-export type Secret = {
+export type Galaxy = {
   id: number;
-  title: string;
-  body: string;
+  catalog: string;
+  x: number;
+  y: number;
+  size: number;
+  hue: 'gold' | 'ice' | 'dust' | 'rose' | 'steel';
+  spin: number;
+  /** Pista cuando en la Historia aparece un «secreto». */
+  clue?: string;
+  /** El secreto de verdad. Vacío hasta que esté en el código. */
+  secret?: string;
 };
 
-export const secretsIntro = 'Cosas que no te he dicho. No porque no quiera: porque en voz alta cambian de forma.';
+export const secretsIntro =
+  'Ocho galaxias. Están lejos. Casi no hay datos: de algunas, una pista en la Historia. De las otras, de momento, nada.';
 
-export const secrets: Secret[] = [
+export const galaxies: Galaxy[] = [
   {
     id: 1,
-    title: 'Un plan que todavía no está en la lista',
-    body: 'Hay uno que no he numerado. Si lo pongo ahora, deja de ser mío. Cuando toque, lo vas a reconocer.',
+    catalog: 'GN-z11',
+    x: 22,
+    y: 26,
+    size: 4.6,
+    hue: 'gold',
+    spin: 52,
+    clue: 'Historia 01.03. Un sitio que en primavera se llena de flores. Aún no lo hemos encontrado.Sigue pendiente.',
   },
   {
     id: 2,
-    title: 'Algo que pensé el primer día y no solté',
-    body: 'No fue una frase bonita. Fue una certeza pequeña, incómoda, de las que no se dicen en un segundo mensaje.',
+    catalog: 'HD1',
+    x: 78,
+    y: 20,
+    size: 3.2,
+    hue: 'ice',
+    spin: 67,
+    clue: 'Historia 03.09. Chiringuito. Granizados, terraza, atardecer. Por que se sentó exactamente en esa silla? Aún es un misterio.',
   },
   {
     id: 3,
-    title: 'Por qué me acuerdo de detalles tontos',
-    body: 'No los colecciono. Se me quedan solos. Si algún día te parece demasiado, ya sabes de dónde viene.',
+    catalog: 'JADES-GS-z13',
+    x: 48,
+    y: 44,
+    size: 5.4,
+    hue: 'dust',
+    spin: 84,
+    clue: 'Historia 04.01. Bajaste de tu pisito. Algo me desconcentró.',
   },
   {
     id: 4,
-    title: 'Lo que no es este regalo',
-    body: 'No es una trampa ni un discurso. Es un sitio donde ir metiendo lo que vamos viviendo. El resto, si sale, sale.',
+    catalog: 'MACS0647-JD',
+    x: 16,
+    y: 64,
+    size: 3.6,
+    hue: 'rose',
+    spin: 41,
+    clue: 'Historia 04.04. Jarritos en El Pardo. Recuerdas el sabor? Pero hay algo más...',
+  },
+  {
+    id: 5,
+    catalog: 'GLASS-z12',
+    x: 84,
+    y: 58,
+    size: 4.0,
+    hue: 'steel',
+    spin: 73,
+  },
+  {
+    id: 6,
+    catalog: 'WHL0137-08',
+    x: 40,
+    y: 78,
+    size: 2.8,
+    hue: 'gold',
+    spin: 96,
+  },
+  {
+    id: 7,
+    catalog: 'SPT0615-JD',
+    x: 66,
+    y: 72,
+    size: 2.4,
+    hue: 'ice',
+    spin: 58,
+  },
+  {
+    id: 8,
+    catalog: 'CEERS-93316',
+    x: 54,
+    y: 14,
+    size: 2.1,
+    hue: 'steel',
+    spin: 110,
   },
 ];

@@ -81,7 +81,7 @@ export function ArchivoLayer({ onBack }: Props) {
 
   return (
     <div className="album-page z-20 animate-depth-in">
-      <header className="relative z-30 flex shrink-0 items-center justify-between px-5 pb-2 pt-[calc(var(--safe-top)+1rem)]">
+      <header className="relative z-30 flex shrink-0 items-center justify-between px-5 pb-3 pt-[calc(var(--safe-top)+1.75rem)]">
         <div className="flex items-center gap-2">
           <BackChip
             onClick={() => {

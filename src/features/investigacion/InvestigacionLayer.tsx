@@ -14,8 +14,8 @@ export function InvestigacionLayer({ onBack, backLabel = 'universo', focusId }: 
   const file = dossiers.find((d) => d.id === open);
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-ink/90 backdrop-blur-md animate-depth-in">
-      <header className="safe-pad flex items-center justify-between pb-2">
+    <div className="absolute inset-0 z-20 flex min-h-0 flex-col overflow-hidden bg-ink/90 backdrop-blur-md animate-depth-in">
+      <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-[calc(var(--safe-top)+1.75rem)]">
         <BackChip
           onClick={file ? () => setOpen(null) : onBack}
           label={file ? 'expedientes' : backLabel}

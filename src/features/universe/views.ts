@@ -38,7 +38,7 @@ export const sectionNodes: {
   { id: 'lista', ...nodes.lista, kicker: 'vale', label: 'La lista', glyph: '▴', delay: 160 },
   { id: 'mapa', ...nodes.mapa, kicker: 'sitios', label: 'Mapa', glyph: '⌖', delay: 240 },
   { id: 'archivo', ...nodes.archivo, kicker: '03', label: 'Archivo', glyph: '◎', delay: 320 },
-  { id: 'secretos', ...nodes.secretos, kicker: 'privado', label: 'Confidencial', glyph: '◇', delay: 480 },
+  { id: 'secretos', ...nodes.secretos, kicker: 'campo', label: 'Confidencial', glyph: '◈', delay: 480 },
   { id: 'conclusion', ...nodes.conclusion, kicker: 'fin', label: 'La conclusión', glyph: '—', delay: 560 },
 ];
 

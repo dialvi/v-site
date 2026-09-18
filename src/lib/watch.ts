@@ -227,3 +227,7 @@ export function pingHistoriaMap(beatIndex: number, depth: number) {
   ping(`Historia · mapa desde ${historiaSlide(beatIndex, depth)}`);
 }
 
+export function pingListaChoice(id: number, title: string) {
+  ping(`Lista · casilla ${String(id).padStart(2, '0')} · eligió ${title}`);
+}
+

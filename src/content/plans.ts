@@ -10,13 +10,13 @@ export type Slot = {
   options?: [Plan, Plan];
 };
 
-/** 24 casillas: una cada dos semanas, durante un año. */
+/** 24 casillas. Las 5 primeras ya están disfrutadas. */
 export const TOTAL_SLOTS = 24;
+export const PAST_DONE = 5;
 
-/** A partir de aquí se abre una casilla nueva cada 14 días. Las 5 primeras ya están disfrutadas. */
-export const UNLOCK_START = new Date('2026-09-21T00:00:00+02:00');
-const FORTNIGHT_MS = 14 * 24 * 60 * 60 * 1000;
-const PAST_DONE = 5;
+/** 20 sep 2026 cae la siguiente; después, una cada 15 días. */
+export const UNLOCK_START = new Date('2026-09-20T00:00:00+02:00');
+export const UNLOCK_EVERY_DAYS = 15;
 
 export const slots: Slot[] = [
   {
@@ -59,7 +59,22 @@ export const slots: Slot[] = [
       body: 'Intento fallido de fiesta mexicana.\n\nNo salió. Pasa. La volveré a intentar.',
     },
   },
-  ...Array.from({ length: TOTAL_SLOTS - PAST_DONE }, (_, i) => ({ id: i + 1 + PAST_DONE })),
+  {
+    id: 6,
+    options: [
+      {
+        title: 'Offroad por el río',
+        emoji: '🚙🌊',
+        body: 'Ruta offroad por Guadalajara, pegados al río. Picnic y sorpresas.',
+      },
+      {
+        title: 'Canoa y supervivencia',
+        emoji: '🛶🎣',
+        body: 'Canoa por el pantano más bonito que vas a conocer. Y una experiencia de supervivencia.',
+      },
+    ],
+  },
+  ...Array.from({ length: TOTAL_SLOTS - PAST_DONE - 1 }, (_, i) => ({ id: i + 2 + PAST_DONE })),
 ];
 
 export function slotById(id: number) {
@@ -67,11 +82,79 @@ export function slotById(id: number) {
 }
 
 export function currentUnlock(now = new Date()) {
-  const delta = now.getTime() - UNLOCK_START.getTime();
-  if (delta < 0) return PAST_DONE;
-  return Math.min(TOTAL_SLOTS, PAST_DONE + Math.floor(delta / FORTNIGHT_MS) + 1);
+  let open = PAST_DONE;
+  for (let id = PAST_DONE + 1; id <= TOTAL_SLOTS; id++) {
+    const at = slotUnlockAt(id);
+    if (!at || at.getTime() > now.getTime()) break;
+    open = id;
+  }
+  return open;
 }
 
 export function isSlotOpen(id: number, now = new Date()) {
   return id <= currentUnlock(now);
+}
+
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+export function prettyDate(d: Date) {
+  const base = `${d.getDate()} ${MESES[d.getMonth()]}`;
+  return d.getFullYear() === new Date().getFullYear() ? base : `${base} ${d.getFullYear()}`;
+}
+
+export function slotUnlockAt(id: number) {
+  if (id <= PAST_DONE) return null;
+  const step = id - PAST_DONE - 1;
+  return new Date(Date.UTC(2026, 8, 20 + step * UNLOCK_EVERY_DAYS, 10, 0, 0));
+}
+
+export function daysUntil(d: Date, now = new Date()) {
+  const a = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const b = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.round((b - a) / 86400000);
+}
+
+export function daysLabel(d: Date, now = new Date()) {
+  const n = daysUntil(d, now);
+  if (n <= 0) return 'hoy';
+  if (n === 1) return 'en 1 día';
+  return `en ${n} días`;
+}
+
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+export function isUnlockDay(id: number, now = new Date()) {
+  const at = slotUnlockAt(id);
+  return Boolean(at && sameDay(at, now) && isSlotOpen(id, now));
+}
+
+const DRAFT_KEY = 'v-lista-options';
+
+function loadDrafts(): Record<string, [Plan, Plan]> {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, [Plan, Plan]>;
+  } catch {
+    return {};
+  }
+}
+
+/** Si el plan ya está en el código, eso manda. Si no, se usa el borrador local. */
+export function optionsFor(slot: Slot): [Plan, Plan] | undefined {
+  if (slot.options) return slot.options;
+  return loadDrafts()[String(slot.id)];
+}
+
+export function rememberDraft(id: number, gifts: [Plan, Plan]) {
+  if (slotById(id)?.options) return;
+  const drafts = loadDrafts();
+  drafts[String(id)] = gifts;
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  } catch {
+    /* private mode */
+  }
 }

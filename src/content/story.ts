@@ -272,13 +272,23 @@ export const storyBeats: StoryBeat[] = [
         title: 'Rita Rita Rita Rita',
         body: 'El universo tiene algo contra mi, no podía permitir que todo fuese tan bien y decidió poner un señor borracho en nuestro camino preguntandome que si yo era Rita la Cantaora o al menos eso entendí yo 😂​ No pasa nada, pequeño bug, quedó olvidado hasta que al fin de semana siguiente una señora me preguntó lo mismo 🤗​',
       },
+      {
+        kicker: '08',
+        title: 'Madrid desde el cielo',
+        body: 'Decidimos ir a mi urbanización y subir al ático a ver las vistas de madrid al atardecer y saliió uno de los videitos más espectaculares de la historia 😎​ Empezo a entrarnos hambre asi que reservamos en un restaurante cerquita!',
+      },
+      {
+        kicker: '09',
+        title: 'Cenita',
+        body: 'Fuimos al restaurante asturiano y probaste los oricios deliciosos de aperitivo y luego unos platos ricos... Gracias por esperarme que entre comer con la mano izquierda y la tos me era un tanto dificil cenar peeero disfrute mucho la conversación 🙃​',
+      },
     ],
   },
   {
-    id: 'mexicana',
+    id: 'mexicano',
     index: '05',
     emoji: '🇲🇽',
-    title: 'La fiesta mexicana',
+    title: '',
     lead: 'Lo que se suponía que iba a ser. Y lo que fue.',
     details: [
       {

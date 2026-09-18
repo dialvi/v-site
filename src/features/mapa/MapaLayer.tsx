@@ -39,8 +39,8 @@ export function MapaLayer({ onBack, backLabel = 'universo', onJump, focusId }: P
   const activePlan = place?.plan;
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col bg-ink">
-      <header className="safe-pad relative z-30 flex items-center justify-between pb-2">
+    <div className="absolute inset-0 z-20 flex min-h-0 flex-col overflow-hidden bg-ink">
+      <header className="relative z-30 flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-[calc(var(--safe-top)+1.75rem)]">
         <BackChip onClick={place ? () => setOpen(null) : onBack} label={place ? 'mapa' : backLabel} />
         <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">Mapa</p>
       </header>

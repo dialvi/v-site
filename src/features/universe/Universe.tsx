@@ -294,9 +294,10 @@ function TitleMark({ entered, onOpenIntro }: { entered: boolean; onOpenIntro: ()
             <span className="text-[1.35rem]">Para </span>
             <span className="text-[2.55rem]">Valeria</span>
           </p>
-          <p className="mt-2 font-display text-[1.25rem] italic leading-snug text-paper/75">de Diego...</p>
-          <p className="mt-5 font-display text-[1.15rem] italic leading-snug text-paper/70">por tu cumpleaños</p>
-          <p className="mt-1 text-[14px] leading-snug text-paper/55">para que sigas disfrutando la vida</p>
+          <p className="mt-2 font-display text-[1.25rem] italic leading-snug text-paper/75">de Diego</p>
+          <p className="mt-5 max-w-[22ch] mx-auto text-[15px] leading-relaxed text-paper/65">
+            por tu cumpleaños, que sigas disfrutando de la vida 😊
+          </p>
         </>
       )}
     </div>
@@ -332,11 +333,8 @@ function IntroHud({ onEnter }: { onEnter: () => void }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-end safe-pad">
       <div className="mb-[10vh] flex flex-col items-center text-center animate-slide-up">
-        <p className="max-w-[28ch] text-[15px] leading-relaxed text-paper/70">
-          Me dijiste que te gustaba la astronomía.
-        </p>
-        <p className="mt-4 max-w-[30ch] text-[15px] leading-relaxed text-paper/55">
-          Mi regalo es un poco extraño, pero te servirá para recordar y explorar tu universo de experiencias.
+        <p className="font-display text-[1.45rem] italic leading-snug text-paper/80">
+          Recuerda. Vive. Explora
         </p>
         <button
           type="button"
