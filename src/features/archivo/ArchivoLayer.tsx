@@ -53,6 +53,7 @@ function saveNotes(notes: AlbumNotes) {
 }
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
+let videosMuted = true;
 
 export function ArchivoLayer({ onBack }: Props) {
   useEffect(() => {
@@ -67,24 +68,54 @@ export function ArchivoLayer({ onBack }: Props) {
 
   const [stage, setStage] = useState<HTMLDivElement | null>(null);
   const [looking, setLooking] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [muted, setMuted] = useState(videosMuted);
   const closer = useRef<() => void>(() => undefined);
+
+  const putMuted = (next: boolean) => {
+    videosMuted = next;
+    setMuted(next);
+    duckUniverseTheme(!next);
+    ensureUniverseTheme();
+  };
 
   return (
     <div className="album-page z-20 animate-depth-in">
       <header className="relative z-30 flex shrink-0 items-center justify-between px-5 pb-2 pt-[calc(var(--safe-top)+1rem)]">
-        <BackChip
-          onClick={() => {
-            if (looking) closer.current();
-            else leave();
-          }}
-          label={looking ? 'cerrar' : 'universo'}
-        />
+        <div className="flex items-center gap-2">
+          <BackChip
+            onClick={() => {
+              if (looking) closer.current();
+              else leave();
+            }}
+            label={looking ? 'cerrar' : 'universo'}
+          />
+          {looking && videoOpen && (
+            <button
+              type="button"
+              onClick={() => {
+                haptic('light');
+                putMuted(!muted);
+              }}
+              className="pointer-events-auto rounded-full border border-paper/15 bg-ink/55 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.22em] text-paper/75 backdrop-blur-md"
+            >
+              {muted ? 'sin sonido' : 'sonido'}
+            </button>
+          )}
+        </div>
         <p className="font-display text-[15px] italic text-paper/70">el álbum</p>
       </header>
 
       <div ref={setStage} className="relative min-h-0 flex-1">
         <div className="album-sheet px-6 pb-[calc(var(--safe-bottom)+3rem)]">
-          <DriveVault stage={stage} onLooking={setLooking} closer={closer} />
+          <DriveVault
+            stage={stage}
+            onLooking={setLooking}
+            onVideo={setVideoOpen}
+            muted={muted}
+            onMuted={putMuted}
+            closer={closer}
+          />
         </div>
       </div>
     </div>
@@ -94,10 +125,16 @@ export function ArchivoLayer({ onBack }: Props) {
 function DriveVault({
   stage,
   onLooking,
+  onVideo,
+  muted,
+  onMuted,
   closer,
 }: {
   stage: HTMLDivElement | null;
   onLooking: (open: boolean) => void;
+  onVideo: (open: boolean) => void;
+  muted: boolean;
+  onMuted: (next: boolean) => void;
   closer: MutableRefObject<() => void>;
 }) {
   const configured = isArchiveConfigured();
@@ -153,7 +190,8 @@ function DriveVault({
 
   useEffect(() => {
     onLooking(index !== null);
-  }, [index, onLooking]);
+    onVideo(viewer?.kind === 'video');
+  }, [index, onLooking, onVideo, viewer?.kind]);
 
   useEffect(() => {
     closer.current = () => {
@@ -348,6 +386,8 @@ function DriveVault({
               total={items.length}
               loading={loadingId === viewer.id}
               primed={primed}
+              muted={muted}
+              onMuted={onMuted}
               onClose={() => {
                 pingArchivoPhotoClose();
                 duckUniverseTheme(false);
@@ -370,6 +410,8 @@ function MediaViewer({
   total,
   loading,
   primed,
+  muted,
+  onMuted,
   onClose,
   onPrev,
   onNext,
@@ -379,6 +421,8 @@ function MediaViewer({
   total: number;
   loading: boolean;
   primed: string[];
+  muted: boolean;
+  onMuted: (next: boolean) => void;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -391,7 +435,6 @@ function MediaViewer({
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState({ s: 1, x: 0, y: 0 });
   const [ready, setReady] = useState(false);
-  const [muted, setMuted] = useState(true);
   const [notes, setNotes] = useState(loadNotes);
   const src = item.src;
   const preview = src && !src.includes('/preview') ? src : item.thumb;
@@ -421,7 +464,6 @@ function MediaViewer({
 
   useEffect(() => {
     setReady(false);
-    setMuted(true);
     putZoom({ s: 1, x: 0, y: 0 });
   }, [item.id, src]);
 
@@ -615,16 +657,12 @@ function MediaViewer({
                 onPlay={() => ensureUniverseTheme()}
                 onPause={() => ensureUniverseTheme()}
                 onEnded={() => {
-                  setMuted(true);
                   duckUniverseTheme(false);
                   ensureUniverseTheme();
                 }}
                 onVolumeChange={(e) => {
                   const el = e.currentTarget;
-                  const silent = el.muted || el.volume === 0;
-                  setMuted(silent);
-                  duckUniverseTheme(!silent);
-                  ensureUniverseTheme();
+                  onMuted(el.muted || el.volume === 0);
                 }}
               />
             )}
@@ -639,26 +677,6 @@ function MediaViewer({
               />
             ))}
             {waiting && <MediaWait kind="video" poster={item.thumb} />}
-            {playable && ready && (
-              <button
-                type="button"
-                data-skip="1"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  haptic('light');
-                  setMuted((on) => {
-                    const next = !on;
-                    duckUniverseTheme(!next);
-                    ensureUniverseTheme();
-                    return next;
-                  });
-                }}
-                className="absolute left-3 top-3 z-20 rounded-full border border-paper/20 bg-ink/70 px-3 py-1.5 font-display text-[12px] italic text-paper/80"
-              >
-                {muted ? 'sin sonido' : 'sonido on'}
-              </button>
-            )}
           </>
         ) : preview ? (
           <img
