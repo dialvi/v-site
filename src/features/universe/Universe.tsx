@@ -86,11 +86,20 @@ export function Universe() {
     flyTo(viewFor(next, w, h), reduced ? 1 : 900, () => setLayer(next));
   };
 
+  const theme = useRef<HTMLAudioElement | null>(null);
+
   const enter = () => {
     const { w, h } = viewport();
     haptic('medium');
     setEntered(true);
     pingUniverse();
+    if (!theme.current) {
+      const audio = new Audio(`${import.meta.env.BASE_URL}media/audio/universe.mp3`);
+      audio.loop = true;
+      audio.volume = 0.42;
+      theme.current = audio;
+    }
+    void theme.current.play().catch(() => undefined);
     flyTo(viewFor('map', w, h), reduced ? 1 : 1400, () => {
       setView('map');
     });

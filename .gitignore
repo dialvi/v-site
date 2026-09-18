@@ -20,6 +20,7 @@ public/media/photos/*
 public/media/audio/*
 public/media/videos/*
 !public/media/**/.gitkeep
+!public/media/audio/universe.mp3
 *.mp4
 *.mov
 *.m4v
@@ -33,3 +34,4 @@ public/media/videos/*
 *.webp
 *.heic
 *.gif
+!public/media/audio/universe.mp3

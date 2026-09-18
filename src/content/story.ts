@@ -255,14 +255,23 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '04',
         title: 'Paseito por El Pardo',
-        body: 'Llegamos a un Spot, uno de mis favoritos cerca de casa. Al salir del coche te preguté si tenías sed y saqué unos Jarritos sorpresa. Fuimos caminando hasta donde estaban las cabras sin abrir los Jarritos. Se nos calentaron un poco pero estaban deliciosos igual, recuerdas de que sabor eran? Yo si jaja Secreto!',
+        body: 'Llegamos al Spot, uno de mis favoritos cerca de casa. Al salir del coche te preguté si tenías sed y saqué unos Jarritos sorpresa. Fuimos caminando hasta donde estaban las cabras sin abrir los Jarritos. Se nos calentaron un poco pero estaban deliciosos igual, recuerdas de que sabor eran? Yo si jaja Secreto!',
       },
       {
         kicker: '05',
-        title: 'Cabras y Jarritos',
-        body: '',
+        title: 'Cabras',
+        body: 'Las cabras simpatiquisimas pero preferían a los niños que a nosotros, ya les llevaremos el kilito de zanahorias 🥕​ Como no nos querían fuimos a buscar un sitio para tomar los jarritooos',
       },
-
+      {
+        kicker: '06',
+        title: 'El Tronco',
+        body: 'El mejor lugar para tomar los jarritooos, un arbol caído, las torres a un lado, al otro el atardecer. Tengo un recuerdo bonito de ese momento, fue el primer dia del verano que ví tantisimas golondrinas surcando el cielo y eso todos los años me hace mucha ilusión 🌞​',
+      },
+      {
+        kicker: '07',
+        title: 'Rita Rita Rita Rita',
+        body: 'El universo tiene algo contra mi, no podía permitir que todo fuese tan bien y decidió poner un señor borracho en nuestro camino preguntandome que si yo era Rita la Cantaora o al menos eso entendí yo 😂​ No pasa nada, pequeño bug, quedó olvidado hasta que al fin de semana siguiente una señora me preguntó lo mismo 🤗​',
+      },
     ],
   },
   {

@@ -89,7 +89,7 @@ export function HistoriaLayer({ onBack, backLabel, focusId, onOpenMap }: Props) 
     <div className="absolute inset-0 z-20 flex flex-col bg-ink/88 backdrop-blur-md animate-depth-in">
       <header className="safe-pad flex items-center justify-between pb-2">
         <BackChip onClick={leave} label={backLabel} />
-        <p className="text-[11px] uppercase tracking-[0.28em] text-paper/45">Historia</p>
+        <p className="text-[12px] uppercase tracking-[0.28em] text-paper/45">Historia</p>
       </header>
 
       <div
@@ -261,21 +261,21 @@ function BeatColumn({
         }}
       >
         <section className="flex h-full min-h-full shrink-0 flex-col px-6 pb-[calc(var(--safe-bottom)+4.5rem)] pt-2">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-gold/80">
+          <p className="text-[12px] uppercase tracking-[0.28em] text-gold/80">
             {beat.index} · {beat.emoji}
           </p>
-          <h2 className="mt-3 font-display text-[2.15rem] italic leading-none text-paper">{beat.title}</h2>
+          <h2 className="mt-3 font-display text-[2.25rem] italic leading-none text-paper">{beat.title}</h2>
           {beat.date && (
-            <p className="mt-2 text-[12px] uppercase tracking-[0.22em] text-gold/70">{beat.date}</p>
+            <p className="mt-2 text-[13px] uppercase tracking-[0.22em] text-gold/70">{beat.date}</p>
           )}
-          <p className="mt-5 text-[16px] leading-relaxed text-paper/80">{beat.lead}</p>
+          <p className="mt-5 text-[17px] leading-relaxed text-paper/80">{beat.lead}</p>
           {beat.quote && (
-            <p className="selectable mt-6 border-l border-gold/40 pl-4 font-display text-[1.15rem] italic leading-snug text-paper/70">
+            <p className="selectable mt-6 border-l border-gold/40 pl-4 font-display text-[1.25rem] italic leading-snug text-paper/70">
               “{beat.quote}”
             </p>
           )}
           {beat.note && (
-            <p className="selectable mt-5 text-[15px] leading-relaxed text-paper/70">{beat.note}</p>
+            <p className="selectable mt-5 text-[16px] leading-relaxed text-paper/70">{beat.note}</p>
           )}
           {beat.image && <MediaFrame kind="foto" src={beat.image} />}
           {beat.audio && <AudioSlot src={beat.audio} />}
@@ -286,7 +286,7 @@ function BeatColumn({
               onOpenMap={onOpenMap}
             />
           )}
-          <p className="mt-auto pt-8 text-[11px] uppercase tracking-[0.22em] text-paper/30">
+          <p className="mt-auto pt-8 text-[12px] uppercase tracking-[0.22em] text-paper/30">
             desliza ↓{!isLast ? '  ·  →' : ''}
           </p>
         </section>
@@ -337,12 +337,12 @@ function DetailSlide({
   const place = placeForSlide(beat.id, depth);
   return (
     <section className="flex h-full min-h-full shrink-0 flex-col px-6 pb-[calc(var(--safe-bottom)+4.5rem)] pt-2">
-      <p className="text-[11px] uppercase tracking-[0.28em] text-gold/80">
+      <p className="text-[12px] uppercase tracking-[0.28em] text-gold/80">
         {beat.index}.{detail.kicker ?? ''} · {beat.emoji}
       </p>
-      <h2 className="mt-3 font-display text-[2.05rem] italic leading-[1.05] text-paper">{detail.title}</h2>
+      <h2 className="mt-3 font-display text-[2.15rem] italic leading-[1.05] text-paper">{detail.title}</h2>
       {detail.body && (
-        <p className="selectable mt-6 text-[16px] leading-relaxed text-paper/75">{detail.body}</p>
+        <p className="selectable mt-6 text-[18px] leading-relaxed text-paper/75">{detail.body}</p>
       )}
       {place && onOpenMap && (
         <MapJump
@@ -356,7 +356,7 @@ function DetailSlide({
           desliza →
         </p>
       ) : (
-        <p className="mt-auto pt-8 text-[11px] uppercase tracking-[0.22em] text-paper/30">
+        <p className="mt-auto pt-8 text-[12px] uppercase tracking-[0.22em] text-paper/30">
           {last ? '' : 'desliza ↓'}
         </p>
       )}
@@ -380,7 +380,7 @@ function MapJump({
         haptic('medium');
         onOpenMap(placeId, storyFocus);
       }}
-      className="mt-8 w-full rounded-full border border-[#e23a32]/50 bg-[#e23a32]/10 py-3.5 text-[12px] uppercase tracking-[0.2em] text-[#e23a32]"
+      className="mt-8 w-full rounded-full border border-[#e23a32]/50 bg-[#e23a32]/10 py-3.5 text-[13px] uppercase tracking-[0.2em] text-[#e23a32]"
     >
       Ver en el mapa →
     </button>
