@@ -284,23 +284,4 @@ export const storyBeats: StoryBeat[] = [
       },
     ],
   },
-  {
-    id: 'mexicano',
-    index: '05',
-    emoji: '🇲🇽',
-    title: '',
-    lead: 'Lo que se suponía que iba a ser. Y lo que fue.',
-    details: [
-      {
-        kicker: '01',
-        title: 'Recordar historia',
-        body: 'Había un plan. Luego llegó la noche y el plan se desvió.',
-      },
-      {
-        kicker: '02',
-        title: 'El plot twist',
-        body: 'No fue el disfraz. Fue lo que pasó cuando nadie estaba siguiendo el guion.',
-      },
-    ],
-  },
 ];

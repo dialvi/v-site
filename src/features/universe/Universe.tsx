@@ -235,19 +235,7 @@ export function Universe() {
         />
       )}
       {layer === 'conclusion' && (
-        <ConclusionLayer
-          alreadyUnlocked={save.unlockedFirst}
-          onBack={backFromLayer}
-          backLabel={backLabel}
-          onUnlock={() => {
-            void patch({ unlockedFirst: true });
-            setStack([]);
-            const { w, h } = viewport();
-            setLayer('lista');
-            setView('lista');
-            flyTo(viewFor('lista', w, h), reduced ? 1 : 700);
-          }}
-        />
+        <ConclusionLayer onBack={backFromLayer} backLabel={backLabel} />
       )}
 
       {layer !== 'mapa' && <Grain />}
