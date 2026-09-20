@@ -37,6 +37,26 @@ function pad(n: number) {
 }
 
 const STAGGER = 220;
+const FALLEN_KEY = 'v-lista-fallen';
+
+function readFallen(): number[] {
+  try {
+    const raw = localStorage.getItem(FALLEN_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === 'number') : [];
+  } catch {
+    return [];
+  }
+}
+
+function rememberFallen(id: number) {
+  try {
+    localStorage.setItem(FALLEN_KEY, JSON.stringify([...new Set([...readFallen(), id])]));
+  } catch {
+    /* private mode */
+  }
+}
 
 const RING = { inX: 32, inY: 28 };
 
@@ -200,18 +220,19 @@ function WishStar({
   };
 
   useEffect(() => {
+    if (landed || path) return;
     const box = host.current?.offsetParent as HTMLElement | null;
     if (!box) return;
     const draw = () => {
       if (box.clientWidth < 8 || box.clientHeight < 8) return;
       const next = wishPath(box.clientWidth, box.clientHeight, land);
-      setPath((prev) => (prev === next ? prev : next));
+      setPath((prev) => prev || next);
     };
     draw();
     const ro = new ResizeObserver(draw);
     ro.observe(box);
     return () => ro.disconnect();
-  }, [land.x, land.y]);
+  }, [land.x, land.y, landed, path]);
 
   useEffect(() => {
     if (!play || !path || landed) return;
@@ -262,7 +283,14 @@ function Field({
   const play = !reduced;
   const cells = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i + 1), []);
   const wishId =
-    cells.find((id) => isUnlockDay(id) && !slotById(id)?.done) ?? null;
+    cells.find(
+      (id) =>
+        isUnlockDay(id) &&
+        !slotById(id)?.done &&
+        choices[String(id)] == null,
+    ) ?? null;
+  const alreadyDown = wishId != null && readFallen().includes(wishId);
+  const fly = play && !alreadyDown;
   const lived = useMemo(
     () =>
       cells.filter(
@@ -276,12 +304,15 @@ function Field({
   const orbiting = cells.filter((id) => !lived.includes(id) && id !== wishId);
   const nextLocked = openUntil < TOTAL_SLOTS ? openUntil + 1 : null;
   const nextAt = nextLocked ? slotUnlockAt(nextLocked) : null;
-  const [whisper, setWhisper] = useState<string | null>(null);
-  const [wishLanded, setWishLanded] = useState(!play || !wishId);
+  const [whisper, setWhisper] = useState<string | null>(
+    alreadyDown ? 'Toca la estrella.' : null,
+  );
+  const [wishLanded, setWishLanded] = useState(!fly || !wishId);
 
   useEffect(() => {
-    setWishLanded(!play || !wishId);
-    setWhisper(null);
+    const down = wishId != null && readFallen().includes(wishId);
+    setWishLanded(!play || !wishId || down);
+    setWhisper(down ? 'Toca la estrella.' : null);
   }, [wishId, play]);
 
   return (
@@ -368,8 +399,9 @@ function Field({
           <WishStar
             key={wishId}
             land={yearPos(wishId)}
-            play={play}
+            play={fly}
             onLanded={() => {
+              rememberFallen(wishId);
               setWishLanded(true);
               haptic('success');
               setWhisper('Toca la estrella.');

@@ -966,54 +966,72 @@
   display: block;
   translate: -50% -50%;
   border-radius: 50%;
+  animation: gal-breathe var(--gal-breathe, 8s) ease-in-out infinite;
+  animation-delay: var(--gal-breathe-delay, 0s);
 }
 
-.galaxia i {
+.galaxia i,
+.galaxia span {
   pointer-events: none;
 }
 
 .gal-halo {
   position: absolute;
-  inset: -55%;
+  inset: -48%;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--gal-glow) 0%, transparent 70%);
-  filter: blur(10px);
-  opacity: 0.7;
-  animation: gal-pulse 7s ease-in-out infinite;
+  background: radial-gradient(ellipse 72% 48% at 50% 50%, var(--gal-glow) 0%, transparent 72%);
+  filter: blur(11px);
+  opacity: 0.75;
+  animation: gal-pulse 7.4s ease-in-out infinite;
+  animation-delay: inherit;
+}
+
+.gal-tilt {
+  position: absolute;
+  inset: 4%;
+  display: block;
+  rotate: var(--gal-tilt, -16deg);
+  scale: 1 var(--gal-squash, 0.4);
 }
 
 .gal-disk {
   position: absolute;
-  inset: 8%;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 48% 46%,
+    var(--gal-core) 0 8%,
+    var(--gal-arm) 26%,
+    var(--gal-arm-2) 48%,
+    transparent 72%
+  );
+  filter: blur(1.1px);
+  opacity: 0.92;
+}
+
+.gal-arms {
+  position: absolute;
+  inset: -12%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 44% 40%, var(--gal-core) 0 10%, transparent 28%),
-    conic-gradient(
-      from 18deg,
-      transparent 0 12%,
-      var(--gal-arm) 18%,
-      transparent 32%,
-      var(--gal-arm-2) 48%,
-      transparent 62%,
-      var(--gal-arm) 78%,
-      transparent 92%
-    );
-  filter: blur(0.35px);
-  opacity: 0.9;
+    radial-gradient(ellipse 92% 22% at 50% 50%, var(--gal-arm) 0%, transparent 62%),
+    radial-gradient(ellipse 24% 88% at 50% 50%, var(--gal-arm-2) 0%, transparent 62%);
+  filter: blur(1.8px);
+  opacity: 0.8;
+  mix-blend-mode: screen;
   animation: gal-spin var(--gal-spin, 60s) linear infinite;
-  box-shadow: inset 0 0 18px rgba(12, 11, 10, 0.35);
 }
 
 .gal-core {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 18%;
-  height: 18%;
+  width: 20%;
+  height: 20%;
   border-radius: 999px;
   translate: -50% -50%;
-  background: var(--gal-core);
-  box-shadow: 0 0 14px var(--gal-glow);
+  background: radial-gradient(circle at 38% 34%, #fff 0%, var(--gal-core) 42%, transparent 74%);
+  box-shadow: 0 0 18px var(--gal-glow);
 }
 
 .gal-hue-gold {
@@ -1053,7 +1071,8 @@
 
 .gal-on {
   z-index: 5;
-  scale: 1.18;
+  animation: none;
+  scale: 1.22;
 }
 
 .gal-on .gal-halo {
@@ -1063,6 +1082,16 @@
 
 .gal-seen {
   opacity: 0.82;
+}
+
+@keyframes gal-breathe {
+  0%,
+  100% {
+    scale: 0.84;
+  }
+  50% {
+    scale: 1.14;
+  }
 }
 
 @keyframes gal-spin {
@@ -1104,7 +1133,9 @@
   .vale-wake,
   .gal-disk,
   .gal-halo,
-  .gal-dust {
+  .gal-dust,
+  .gal-arms,
+  .galaxia {
     animation: none;
   }
 

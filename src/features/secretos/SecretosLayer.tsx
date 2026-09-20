@@ -75,10 +75,17 @@ export function SecretosLayer({ onBack }: Props) {
                   width: `${item.size}rem`,
                   height: `${item.size}rem`,
                   ['--gal-spin' as string]: reduced ? '0s' : `${item.spin}s`,
+                  ['--gal-breathe' as string]: reduced ? '0s' : `${6.5 + item.id * 0.9}s`,
+                  ['--gal-breathe-delay' as string]: `${-item.id * 1.35}s`,
+                  ['--gal-tilt' as string]: `${[-24, 16, -9, 27, -18, 11, -32, 7][item.id - 1]}deg`,
+                  ['--gal-squash' as string]: `${[0.36, 0.48, 0.3, 0.52, 0.4, 0.34, 0.5, 0.42][item.id - 1]}`,
                 }}
               >
                 <i className="gal-halo" />
-                <i className="gal-disk" />
+                <span className="gal-tilt">
+                  <i className="gal-disk" />
+                  <i className="gal-arms" />
+                </span>
                 <i className="gal-core" />
               </button>
             );

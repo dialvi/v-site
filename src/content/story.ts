@@ -55,12 +55,12 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '05',
         title: 'El podcast',
-        body: 'Te dije que obviamente seguía en pie y que cuando te viniera bien. A los 10 días sin contestarme 😂​ se me ocurrió algo: te mandé el primer podcast pidiéndote el número de teléfono para organizar mejooor.',
+        body: 'Obviamente seguía en pie y que cuando te viniera bien te dije. A los 10 días sin contestarme 😂​ se me ocurrió algo: te mandé el primer podcast pidiéndote el número de teléfono para organizar mejooor.',
       },
       {
         kicker: '08',
         title: '67 días',
-        body: 'El sábado 23 de mayo, tras 67 días de negociación dura, logramos quedar para el HIKE por la Bola del Mundo.',
+        body: 'El sábado 23 de mayo, tras 67 días de dura negociación, logramos quedar para el HIKE por la Bola del Mundo.',
       },
     ],
   },
@@ -76,7 +76,7 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '01',
         title: 'Debajo de tu casa',
-        body: 'Sin saber dónde vivías te envié el restaurante que estaba debajo de tu casa para comer antes de la montaña. Allí nos vimos y comimos riquísimo.',
+        body: 'Sin saber dónde vivías te envié el restaurante que estaba justo debajo de tu casa para comer antes de la montaña. Allí nos vimos y comimos riquísimo.',
       },
       {
         kicker: '02',
@@ -120,9 +120,9 @@ export const storyBeats: StoryBeat[] = [
       },
       {
         kicker: '09',
-        title: 'El Cachibache',
-        body: 'Primer hito: llegar al Cachibache. Nunca sabremos qué es aquella estructura. Aquí me diste la idea de escribir un libro de La Conclusión. Mi hermano te robó una pegatina; la conseguiré de nuevo, prometido 🫡​. Te recuerdo intentando jugar al baloncesto con piedras, el cachibache era la canasta, casi me das en la cabeza 😂​ ',
-        placeId: 'cachibache',
+        title: 'El Cachivache',
+        body: 'Primer hito: llegar al Cachivache. Nunca sabremos qué es aquella estructura. Aquí me diste la idea de escribir un libro de La Conclusión. Mi hermano te robó una pegatina; la conseguiré de nuevo, prometido 🫡​. Te recuerdo intentando jugar al baloncesto con piedras, el cachivache era la canasta, casi me das en la cabeza 😂​ ',
+        placeId: 'cachivache',
       },
       {
         kicker: '10',

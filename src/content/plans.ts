@@ -24,7 +24,7 @@ export const slots: Slot[] = [
     done: {
       title: 'La Bola del Mundo',
       emoji: '⛰️',
-      body: 'El Hike. Jeep levantando polvo, machete, llamada a tu madre y cero cobertura.\n\nBarranca, casi al río, picnic de manguitos, quince minutos de piedras, cabras, el arbolito, el Cachibache, nieve y atardecer en las antenas.\n\nBajamos de noche, con destellos de tormenta y una mini explosión que era el cargador. Fue el primer plan de verdad.',
+      body: 'El Hike. Jeep levantando polvo, machete, llamada a tu madre y cero cobertura.\n\nBarranca, casi al río, picnic de manguitos, quince minutos de piedras, cabras, el arbolito, el Cachivache, nieve y atardecer en las antenas.\n\nBajamos de noche, con destellos de tormenta y una mini explosión que era el cargador. Fue el primer plan de verdad.',
     },
   },
   {
@@ -46,7 +46,7 @@ export const slots: Slot[] = [
   {
     id: 4,
     done: {
-      title: 'Mexicana y rooftop',
+      title: 'Mexicano y rooftop',
       emoji: '🌮',
       body: 'Comida mexicana rica rica que no te convenció del todo, pero ganaste la apuesta: el camarero no era mexicano.\n\nLuego rooftop por Madrid, el ático de mi torre, y un vídeo espectacular. Sin tabla de quesos. Esa sigue pendiente.',
     },
@@ -54,9 +54,9 @@ export const slots: Slot[] = [
   {
     id: 5,
     done: {
-      title: 'La fiesta mexicana (intento 1)',
+      title: 'La fiesta mexicana',
       emoji: '🇲🇽',
-      body: 'Intento fallido de fiesta mexicana.\n\nNo salió. Pasa. La volveré a intentar.',
+      body: 'El Grito con el mejor megaambiente',
     },
   },
   {
