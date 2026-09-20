@@ -1,4 +1,4 @@
-const ARCHIVE_ALLOW_EMAILS = ['avzdiego00@gmail.com', 'avzcrypto@gmail.com'];
+const ARCHIVE_ALLOW_EMAILS = ['avzdiego00@gmail.com', 'avzcrypto@gmail.com', 'valeria.cruzar20@gmail.com'];
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
 const DRIVE_SCOPE = 'openid email https://www.googleapis.com/auth/drive.readonly';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
