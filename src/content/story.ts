@@ -55,7 +55,7 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '05',
         title: 'El podcast',
-        body: 'Te dije que obviamente seguía en pie y que cuando te viniera bien. A los 10 días sin contestarme 😂​ se me ocurrió algo: te mandé el primer podcast pidiendote el número de teléfono para organizar mejooor.',
+        body: 'Te dije que obviamente seguía en pie y que cuando te viniera bien. A los 10 días sin contestarme 😂​ se me ocurrió algo: te mandé el primer podcast pidiéndote el número de teléfono para organizar mejooor.',
       },
       {
         kicker: '08',
@@ -93,7 +93,7 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '04',
         title: 'Voz de locutor',
-        body: 'Poco después de casi caerte al río y yo casi saltar detrás (impresionante tú equilibrio pero casi me da un infarto), me dijiste que tenía voz de locutor de radio. Y yo, contentísimo 😎​​.',
+        body: 'Poco después de casi caerte al río y yo casi saltar detrás (impresionante tu equilibrio pero casi me da un infarto), me dijiste que tenía voz de locutor de radio. Y yo, contentísimo 😎​​.',
         placeId: 'casi-al-rio',
       },
       {
@@ -116,7 +116,7 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '08',
         title: 'El arbolito',
-        body: 'Nos sentamos en aquel arbolito a la sombra, con unas vistas increíbles. AQUÍ creo que empezaste a odiarme, porque te empecé a engañar diciéndote que no quedaba nada, que ya casi estábamos (no llevabamos ni un cuarto de la ruta, perdooon 🙏​​)',
+        body: 'Nos sentamos en aquel arbolito a la sombra, con unas vistas increíbles. AQUÍ creo que empezaste a odiarme, porque te empecé a engañar diciéndote que no quedaba nada, que ya casi estábamos (no llevábamos ni un cuarto de la ruta, perdooon 🙏​​)',
       },
       {
         kicker: '09',
@@ -168,12 +168,12 @@ export const storyBeats: StoryBeat[] = [
     emoji: '🏖️​',
     title: 'Pantano VIP',
     date: '31/05/2026',
-    lead: 'Playita priv sin salir de Madrid, picnic a orillas de San Juan, larga y peligrosísima travesia en yate, y chiringuito con vistazas',
+    lead: 'Playita priv sin salir de Madrid, picnic a orillas de San Juan, larga y peligrosísima travesía en yate, y chiringuito con vistazas',
     details: [
       {
         kicker: '01',
         title: 'Preparación...​',
-        body: 'El día del Hike comentaste que querías ir al pantano y yo empecé a maquinar el plan desde ese mismo momento 🤫 Tragicómicamente dos días antes de quedar tuve un fatidico accidente en bici e iba manco pero no nos impidió disfrutarlooo',
+        body: 'El día del Hike comentaste que querías ir al pantano y yo empecé a maquinar el plan desde ese mismo momento 🤫 Tragicómicamente dos días antes de quedar tuve un fatídico accidente en bici e iba manco pero no nos impidió disfrutarlooo',
       },
       {
         kicker: '02',
@@ -188,22 +188,22 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '04',
         title: 'La otra orilla',
-        body: 'Mientras comiamos, yo se que todos hacíais lo mismo que yo: mirar a la otra orilla. Había que conquistarla 🗺️​🏴‍☠️​ primero tratamos de llegar flotando en un tronco (20 o 25 metros no llegamos a más pero la intención es lo ue cuenta) y luego tratamos de evolucionar la embarcaci´n',
+        body: 'Mientras comíamos, yo sé que todos hacíais lo mismo que yo: mirar a la otra orilla. Había que conquistarla 🗺️​🏴‍☠️​ primero tratamos de llegar flotando en un tronco (20 o 25 metros no llegamos a más pero la intención es lo que cuenta) y luego tratamos de evolucionar la embarcación',
       },
       {
         kicker: '05',
         title: 'Barquito',
-        body: 'Conseguimos más troncos y el ingeniero trato de diseñar algo que flotase. Todos a una colaborando y recuerdo que me ayudaste a atar las sogas/cuerdas que yo no podía. Y lo más importante la banderá te quedó fantásticamente preciosa',
+        body: 'Conseguimos más troncos y el ingeniero trató de diseñar algo que flotase. Todos a una colaborando y recuerdo que me ayudaste a atar las sogas/cuerdas que yo no podía. Y lo más importante la bandera te quedó fantásticamente preciosa',
       },
       {
         kicker: '06',
         title: 'Detalles graciosos',
-        body: 'Necesitabamos mas material y enviamos a mi hermano al jeep a por sogas, en aquella orilla Maca me hizo esa pregunta incomoda que casi me atraganto 😂​🥲​',
+        body: 'Necesitábamos más material y enviamos a mi hermano al jeep a por sogas, en aquella orilla Maca me hizo esa pregunta incómoda que casi me atragantó 😂​🥲​',
       },
       {
         kicker: '07',
-        title: 'La Travesia',
-        body: 'El barco tendía a virar a estribor y apenas flotaba ​⛵ peeero navegamos valientemente nada mas y nada menos que unos 50 metros, la navegacion mas corta de mi vida pero la más divertida sin duda algunaaa ​🌊',
+        title: 'La Travesía',
+        body: 'El barco tendía a virar a estribor y apenas flotaba ​⛵ peeero navegamos valientemente nada más y nada menos que unos 50 metros, la navegación más corta de mi vida pero la más divertida sin duda algunaaa ​🌊',
       },
       {
         kicker: '08',
@@ -213,12 +213,12 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '09',
         title: 'Chiringuito 01',
-        body: 'Nada mas entrar vi algo que se te había antojado el día del Hike y no lo dudé, un par de Granizados. Salimos a la terraza, había un atardecer precioso y yo estudié el angulo optimo y me senté en esa silla de manera totalmente premeditada pero el porque es un secreto... ',
+        body: 'Nada más entrar vi algo que se te había antojado el día del Hike y no lo dudé, un par de Granizados. Salimos a la terraza, había un atardecer precioso y yo estudié el ángulo óptimo y me senté en esa silla de manera totalmente premeditada pero el porqué es un secreto... ',
       },
       {
         kicker: '10',
         title: 'Chiringuito 02',
-        body: 'Leimos la carta y DECIDIDO! Era obvio, los torreznos! Pedimos además unos tomatitos con atun, calamares... todo riquísimo...  Lamentablemente mi accidentada mano me impedía cortar los amsiados torreznos yyyyy eeeeh la persona que estaba más lejos de la mesa me ayudó y me los cortó y esto aunque pueda parecer algo sencillo sin importancia para mi fue un detalle que me encantó 🫠​',
+        body: 'Leímos la carta y DECIDIDO! Era obvio, los torreznos! Pedimos además unos tomatitos con atún, calamares... todo riquísimo...  Lamentablemente mi accidentada mano me impedía cortar los ansiados torreznos yyyyy eeeeh la persona que estaba más lejos de la mesa me ayudó y me los cortó y esto aunque pueda parecer algo sencillo sin importancia para mí fue un detalle que me encantó 🫠​',
       },
       {
         kicker: '11',
@@ -240,47 +240,47 @@ export const storyBeats: StoryBeat[] = [
       {
         kicker: '01',
         title: 'Empezamoos fuerte',
-        body: 'Te recogí en Villa, cuando bajaste del piso me ocurrió algo que me desconcentró un poco 😂 El qué es un secreto. La verdad es que no tenia nada planeado al 100% y te propusé ir a Aranjuez si no lo conocias peeero ya habías estado asi queeee mi plan estrella se iba a hacer realidad. ',
+        body: 'Te recogí en Villa, cuando bajaste del piso me ocurrió algo que me desconcentró un poco 😂 El qué es un secreto. La verdad es que no tenía nada planeado al 100% y te propuse ir a Aranjuez si no lo conocías peeero ya habías estado así queeee mi plan estrella se iba a hacer realidad. ',
       },
       {
         kicker: '02',
         title: 'Primer tramo',
-        body: 'En el coche, empiezo a notar algo que me pone nervioso 🥵​, yo queria mantener una conversación extemadamente agradable pero en el momento de la verdad ninguno de los protocolos anti-tos que llevaba días planeando funcionó y me quedé sin voz 🤐 Fue un placer escucharte, gracias por la paciencia este día jaja  ​🙂‍↕️​',
+        body: 'En el coche, empiezo a notar algo que me pone nervioso 🥵​, yo quería mantener una conversación extremadamente agradable pero en el momento de la verdad ninguno de los protocolos anti-tos que llevaba días planeando funcionó y me quedé sin voz 🤐 Fue un placer escucharte, gracias por la paciencia este día jaja  ​🙂‍↕️​',
       },
       {
         kicker: '03',
         title: 'Centro comercial',
-        body: 'Si un centro comercial, poco interesante ​😶‍🌫️ pero teniamos que hacer tiempo para que cayerá el sol un poco, hacia calor y en un interior ibamos a estar cómodos. Decidimos tomar Ice Tea y aprendí que el Macha sabe a pasto, tenias razón! La verdad fue bastante bien!',
+        body: 'Si un centro comercial, poco interesante ​😶‍🌫️ pero teníamos que hacer tiempo para que cayera el sol un poco, hacía calor y en un interior íbamos a estar cómodos. Decidimos tomar Ice Tea y aprendí que el Macha sabe a pasto, tenías razón! La verdad fue bastante bien!',
       },
       {
         kicker: '04',
         title: 'Paseito por El Pardo',
-        body: 'Llegamos al Spot, uno de mis favoritos cerca de casa. Al salir del coche te preguté si tenías sed y saqué unos Jarritos sorpresa. Fuimos caminando hasta donde estaban las cabras sin abrir los Jarritos. Se nos calentaron un poco pero estaban deliciosos igual, recuerdas de que sabor eran? Yo si jaja Secreto!',
+        body: 'Llegamos al Spot, uno de mis favoritos cerca de casa. Al salir del coche te pregunté si tenías sed y saqué unos Jarritos sorpresa. Fuimos caminando hasta donde estaban las cabras sin abrir los Jarritos. Se nos calentaron un poco pero estaban deliciosos igual, recuerdas de que sabor eran? Yo si jaja Secreto!',
       },
       {
         kicker: '05',
         title: 'Cabras',
-        body: 'Las cabras simpatiquisimas pero preferían a los niños que a nosotros, ya les llevaremos el kilito de zanahorias 🥕​ Como no nos querían fuimos a buscar un sitio para tomar los jarritooos',
+        body: 'Las cabras simpatiquísimas pero preferían a los niños que a nosotros, ya les llevaremos el kilito de zanahorias 🥕​ Como no nos querían fuimos a buscar un sitio para tomar los jarritooos',
       },
       {
         kicker: '06',
         title: 'El Tronco',
-        body: 'El mejor lugar para tomar los jarritooos, un arbol caído, las torres a un lado, al otro el atardecer. Tengo un recuerdo bonito de ese momento, fue el primer dia del verano que ví tantisimas golondrinas surcando el cielo y eso todos los años me hace mucha ilusión 🌞​',
+        body: 'El mejor lugar para tomar los jarritooos, un árbol caído, las torres a un lado, al otro el atardecer. Tengo un recuerdo bonito de ese momento, fue el primer día del verano que vi tantísimas golondrinas surcando el cielo y eso todos los años me hace mucha ilusión 🌞​',
       },
       {
         kicker: '07',
         title: 'Rita Rita Rita Rita',
-        body: 'El universo tiene algo contra mi, no podía permitir que todo fuese tan bien y decidió poner un señor borracho en nuestro camino preguntandome que si yo era Rita la Cantaora o al menos eso entendí yo 😂​ No pasa nada, pequeño bug, quedó olvidado hasta que al fin de semana siguiente una señora me preguntó lo mismo 🤗​',
+        body: 'El universo tiene algo contra mí, no podía permitir que todo fuese tan bien y decidió poner un señor borracho en nuestro camino preguntándome que si yo era Rita la Cantaora o al menos eso entendí yo 😂​ No pasa nada, pequeño bug, quedó olvidado hasta que al fin de semana siguiente una señora me preguntó lo mismo 🤗​',
       },
       {
         kicker: '08',
         title: 'Madrid desde el cielo',
-        body: 'Decidimos ir a mi urbanización y subir al ático a ver las vistas de madrid al atardecer y saliió uno de los videitos más espectaculares de la historia 😎​ Empezo a entrarnos hambre asi que reservamos en un restaurante cerquita!',
+        body: 'Decidimos ir a mi urbanización y subir al ático a ver las vistas de Madrid al atardecer y salió uno de los videitos más espectaculares de la historia 😎​ Empezó a entrarnos hambre así que reservamos en un restaurante cerquita!',
       },
       {
         kicker: '09',
         title: 'Cenita',
-        body: 'Fuimos al restaurante asturiano y probaste los oricios deliciosos de aperitivo y luego unos platos ricos... Gracias por esperarme que entre comer con la mano izquierda y la tos me era un tanto dificil cenar peeero disfrute mucho la conversación 🙃​',
+        body: 'Fuimos al restaurante asturiano y probaste los oricios deliciosos de aperitivo y luego unos platos ricos... Gracias por esperarme que entre comer con la mano izquierda y la tos me era un tanto difícil cenar peeero disfruté mucho la conversación 🙃​',
       },
     ],
   },

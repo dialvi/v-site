@@ -24,7 +24,7 @@ export const galaxies: Galaxy[] = [
     size: 4.6,
     hue: 'gold',
     spin: 52,
-    clue: 'Historia 01.03. Un sitio que en primavera se llena de flores. Aún no lo hemos encontrado.Sigue pendiente.',
+    clue: 'Historia 01.03. Un sitio que en primavera se llena de flores. Aún no lo hemos encontrado. Sigue pendiente.',
   },
   {
     id: 2,
@@ -34,7 +34,7 @@ export const galaxies: Galaxy[] = [
     size: 3.2,
     hue: 'ice',
     spin: 67,
-    clue: 'Historia 03.09. Chiringuito. Granizados, terraza, atardecer. Por que se sentó exactamente en esa silla? Aún es un misterio.',
+    clue: 'Historia 03.09. Chiringuito. Granizados, terraza, atardecer. Por qué se sentó exactamente en esa silla? Aún es un misterio.',
   },
   {
     id: 3,

@@ -40,7 +40,7 @@ export const slots: Slot[] = [
     done: {
       title: 'Tour Madrid norte v1',
       emoji: '🐐',
-      body: 'Cabras. Jarritos. Un ataque de tos horrible. Y cenita de horicios en el asturiano.\n\nMadrid norte, primera versión. Ya hay material para la v2.',
+      body: 'Cabras. Jarritos. Un ataque de tos horrible. Y cenita de oricios en el asturiano.\n\nMadrid norte, primera versión. Ya hay material para la v2.',
     },
   },
   {
