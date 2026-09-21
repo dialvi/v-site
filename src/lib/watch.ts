@@ -202,6 +202,10 @@ export function pingArchivoComment(id: number, kind: 'image' | 'video' | undefin
   ping(`Archivo · comentario ${archivoItem(id, kind)} · "${text}"`);
 }
 
+export function pingArchivoDownload(id: number, kind: 'image' | 'video' | undefined) {
+  ping(`Archivo · descarga ${archivoItem(id, kind)}`);
+}
+
 export function pingHistoriaOpen(beatIndex: number, depth: number) {
   ping(`Historia · lee ${historiaSlide(beatIndex, depth)}`);
 }

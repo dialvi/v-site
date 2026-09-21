@@ -5,6 +5,7 @@ import { haptic } from '@/lib/haptics';
 import { clamp } from '@/lib/motion';
 import {
   archiveConfig,
+  downloadFileName,
   fetchDriveFile,
   getLiveSession,
   isArchiveConfigured,
@@ -13,10 +14,24 @@ import {
   restoreSession,
   signInToGoogle,
   signOutGoogle,
+  triggerBrowserDownload,
   type DriveMedia,
 } from '@/lib/googleDrive';
 import { duckUniverseTheme, ensureUniverseTheme } from '@/lib/universeTheme';
-import { pingArchivoComment, pingArchivoEnter, pingArchivoLeave, pingArchivoLike, pingArchivoPhoto, pingArchivoPhotoClose } from '@/lib/watch';
+import {
+  pingArchivoComment,
+  pingArchivoDownload,
+  pingArchivoEnter,
+  pingArchivoLeave,
+  pingArchivoLike,
+  pingArchivoPhoto,
+  pingArchivoPhotoClose,
+} from '@/lib/watch';
+
+type DownloadControl = {
+  run: () => void;
+  busy: boolean;
+};
 
 type Props = {
   onBack: () => void;
@@ -71,6 +86,7 @@ export function ArchivoLayer({ onBack }: Props) {
   const [videoOpen, setVideoOpen] = useState(false);
   const [muted, setMuted] = useState(videosMuted);
   const closer = useRef<() => void>(() => undefined);
+  const [download, setDownload] = useState<DownloadControl | null>(null);
 
   const putMuted = (next: boolean) => {
     videosMuted = next;
@@ -90,6 +106,19 @@ export function ArchivoLayer({ onBack }: Props) {
             }}
             label={looking ? 'cerrar' : 'universo'}
           />
+          {looking && (
+            <button
+              type="button"
+              disabled={!download || download.busy}
+              onClick={() => {
+                haptic('light');
+                download?.run();
+              }}
+              className="pointer-events-auto rounded-full border border-paper/15 bg-ink/55 px-3.5 py-1.5 text-[11px] uppercase tracking-[0.22em] text-paper/75 backdrop-blur-md disabled:opacity-45"
+            >
+              {download?.busy ? 'guardando…' : 'descargar'}
+            </button>
+          )}
           {looking && videoOpen && (
             <button
               type="button"
@@ -115,6 +144,7 @@ export function ArchivoLayer({ onBack }: Props) {
             muted={muted}
             onMuted={putMuted}
             closer={closer}
+            onDownload={setDownload}
           />
         </div>
       </div>
@@ -129,6 +159,7 @@ function DriveVault({
   muted,
   onMuted,
   closer,
+  onDownload,
 }: {
   stage: HTMLDivElement | null;
   onLooking: (open: boolean) => void;
@@ -136,6 +167,7 @@ function DriveVault({
   muted: boolean;
   onMuted: (next: boolean) => void;
   closer: MutableRefObject<() => void>;
+  onDownload: (control: DownloadControl | null) => void;
 }) {
   const configured = isArchiveConfigured();
   const live = getLiveSession();
@@ -147,6 +179,7 @@ function DriveVault({
   const [index, setIndex] = useState<number | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(Boolean(configured && !live));
+  const [downloadBusy, setDownloadBusy] = useState(false);
   const loads = useRef(new Map<string, Promise<string | undefined>>());
   const viewer = index !== null ? items[index] ?? null : null;
 
@@ -176,6 +209,39 @@ function DriveVault({
     loads.current.set(item.id, pending);
     return pending;
   }, [token]);
+
+  const downloadOpen = useCallback(async () => {
+    if (index === null || !token) return;
+    const item = items[index];
+    if (!item) return;
+    haptic('light');
+    setDownloadBusy(true);
+    setError(null);
+    try {
+      let src = item.src && !item.src.includes('/preview') ? item.src : undefined;
+      if (!src) {
+        src = await fetchDriveFile(token, item.id);
+        setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
+      }
+      triggerBrowserDownload(src, downloadFileName(item.name, item.kind));
+      pingArchivoDownload(index, item.kind);
+      haptic('success');
+    } catch (err) {
+      console.error(err);
+      setError('No se ha podido descargar. En Drive, activa que los lectores puedan descargar.');
+    } finally {
+      setDownloadBusy(false);
+    }
+  }, [index, token, items]);
+
+  useEffect(() => {
+    if (index === null || !token) {
+      onDownload(null);
+      return;
+    }
+    onDownload({ run: () => void downloadOpen(), busy: downloadBusy });
+    return () => onDownload(null);
+  }, [index, token, downloadBusy, downloadOpen, onDownload]);
 
   const preloadAround = (at: number) => {
     if (!items.length) return;

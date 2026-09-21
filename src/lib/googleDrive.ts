@@ -355,3 +355,19 @@ export function revokeMediaUrls(items: DriveMedia[]) {
     if (item.src?.startsWith('blob:')) URL.revokeObjectURL(item.src);
   }
 }
+
+export function downloadFileName(name: string, kind: DriveMedia['kind']) {
+  const base = name.replace(/[/\\?%*:|"<>]/g, '_').trim() || (kind === 'video' ? 'video' : 'foto');
+  if (/\.(jpe?g|png|gif|webp|heic|heif|avif|mp4|mov|m4v|webm|avi|mkv)$/i.test(base)) return base;
+  return `${base}${kind === 'video' ? '.mp4' : '.jpg'}`;
+}
+
+export function triggerBrowserDownload(blobUrl: string, filename: string) {
+  const anchor = document.createElement('a');
+  anchor.href = blobUrl;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
