@@ -319,6 +319,20 @@ async function collectMedia(accessToken: string, folderId: string, seen: Set<str
   }
 }
 
+export function driveStreamSrc(accessToken: string, fileId: string) {
+  const params = new URLSearchParams({
+    alt: 'media',
+    supportsAllDrives: 'true',
+    acknowledgeAbuse: 'true',
+    access_token: accessToken,
+  });
+  return `https://www.googleapis.com/drive/v3/files/${fileId}?${params}`;
+}
+
+export function drivePreviewSrc(fileId: string) {
+  return `https://drive.google.com/file/d/${fileId}/preview`;
+}
+
 export async function fetchDriveFile(accessToken: string, fileId: string) {
   const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true&acknowledgeAbuse=true`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });

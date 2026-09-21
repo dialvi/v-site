@@ -64,6 +64,9 @@ export const galaxies: Galaxy[] = [
     size: 4.0,
     hue: 'steel',
     spin: 73,
+    clue: 'Tu tercer superpoder.',
+    secret:
+      'Invisible no eres. Aún no puedes volar. Tampoco te teletransportas. Qué será, qué será ¿?¿?',
   },
   {
     id: 6,

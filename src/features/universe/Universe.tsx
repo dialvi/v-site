@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCamera } from '@/hooks/useCamera';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { haptic } from '@/lib/haptics';
-import { preloadUniverseTheme, startUniverseTheme } from '@/lib/universeTheme';
+import { startUniverseTheme } from '@/lib/universeTheme';
 import { pingSection, pingUniverse } from '@/lib/watch';
 import { useUniverseState } from '@/state/UniverseState';
 import { Starfield } from '@/components/Starfield';
@@ -53,10 +53,6 @@ export function Universe() {
     typeof window === 'undefined' ? 844 : window.innerHeight,
   );
   const { camera, flyTo, bind, minScale } = useCamera(start);
-
-  useEffect(() => {
-    preloadUniverseTheme();
-  }, []);
 
   useEffect(() => {
     if (entered) {

@@ -6,6 +6,8 @@ import { clamp } from '@/lib/motion';
 import {
   archiveConfig,
   downloadFileName,
+  drivePreviewSrc,
+  driveStreamSrc,
   fetchDriveFile,
   getLiveSession,
   isArchiveConfigured,
@@ -177,37 +179,16 @@ function DriveVault({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [index, setIndex] = useState<number | null>(null);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(Boolean(configured && !live));
   const [downloadBusy, setDownloadBusy] = useState(false);
-  const loads = useRef(new Map<string, Promise<string | undefined>>());
   const viewer = index !== null ? items[index] ?? null : null;
 
-  const playableSrc = (item?: DriveMedia) =>
-    Boolean(item?.src && !item.src.includes('/preview'));
-
   const ensureSrc = useCallback((item: DriveMedia) => {
-    if (playableSrc(item)) return Promise.resolve(item.src);
+    if (item.src) return Promise.resolve(item.src);
     if (!token) return Promise.resolve(undefined);
-    const cached = loads.current.get(item.id);
-    if (cached) return cached;
-    const pending = fetchDriveFile(token, item.id)
-      .then((src) => {
-        setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
-        return src;
-      })
-      .catch((err) => {
-        console.error(err);
-        if (item.kind === 'video') {
-          const src = `https://drive.google.com/file/d/${item.id}/preview`;
-          setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
-          return src;
-        }
-        loads.current.delete(item.id);
-        throw err;
-      });
-    loads.current.set(item.id, pending);
-    return pending;
+    const src = driveStreamSrc(token, item.id);
+    setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
+    return Promise.resolve(src);
   }, [token]);
 
   const downloadOpen = useCallback(async () => {
@@ -218,10 +199,9 @@ function DriveVault({
     setDownloadBusy(true);
     setError(null);
     try {
-      let src = item.src && !item.src.includes('/preview') ? item.src : undefined;
+      let src = item.src?.startsWith('blob:') ? item.src : undefined;
       if (!src) {
         src = await fetchDriveFile(token, item.id);
-        setItems((prev) => prev.map((entry) => (entry.id === item.id ? { ...entry, src } : entry)));
       }
       triggerBrowserDownload(src, downloadFileName(item.name, item.kind));
       pingArchivoDownload(index, item.kind);
@@ -242,17 +222,6 @@ function DriveVault({
     onDownload({ run: () => void downloadOpen(), busy: downloadBusy });
     return () => onDownload(null);
   }, [index, token, downloadBusy, downloadOpen, onDownload]);
-
-  const preloadAround = (at: number) => {
-    if (!items.length) return;
-    const seen = new Set<string>([items[at]?.id]);
-    for (const offset of [1, -1, 2]) {
-      const item = items[((at + offset) % items.length + items.length) % items.length];
-      if (!item || seen.has(item.id) || item.kind !== 'video' || playableSrc(item)) continue;
-      seen.add(item.id);
-      void ensureSrc(item).catch(() => undefined);
-    }
-  };
 
   useEffect(() => {
     onLooking(index !== null);
@@ -324,45 +293,15 @@ function DriveVault({
     setIndex(null);
   };
 
-  const openAt = async (at: number, how: 'click' | 'siguiente' | 'anterior') => {
+  const openAt = (at: number, how: 'click' | 'siguiente' | 'anterior') => {
     if (!items.length) return;
     const next = ((at % items.length) + items.length) % items.length;
     const item = items[next];
     haptic('light');
     pingArchivoPhoto(how, next, item.kind);
+    if (!item.src && token) void ensureSrc(item);
     setIndex(next);
-    preloadAround(next);
-    if (playableSrc(item) || !token) return;
-    setLoadingId(item.id);
-    setError(null);
-    try {
-      await ensureSrc(item);
-    } catch {
-      setError('No se ha podido abrir el archivo.');
-    } finally {
-      setLoadingId((id) => (id === item.id ? null : id));
-    }
   };
-
-  const primed: string[] = [];
-  if (index !== null && items.length > 1) {
-    const seen = new Set<string>();
-    for (const offset of [1, -1, 2]) {
-      const neighbor = items[((index + offset) % items.length + items.length) % items.length];
-      if (
-        !neighbor ||
-        neighbor.id === items[index]?.id ||
-        neighbor.kind !== 'video' ||
-        !playableSrc(neighbor) ||
-        !neighbor.src ||
-        seen.has(neighbor.src)
-      ) {
-        continue;
-      }
-      seen.add(neighbor.src);
-      primed.push(neighbor.src);
-    }
-  }
 
   return (
     <section>
@@ -418,7 +357,7 @@ function DriveVault({
               <button
                 type="button"
                 onClick={() =>
-                  void openAt(
+                  openAt(
                     items.findIndex((entry) => entry.id === item.id),
                     'click',
                   )
@@ -430,14 +369,13 @@ function DriveVault({
                 {i % 3 === 2 && <i className="album-tape album-tape-r" />}
                 <span className="album-shot">
                   <MediaThumb item={item} onNeedSrc={(entry) => void ensureSrc(entry).catch(() => undefined)} />
-                  {item.kind === 'video' && loadingId !== item.id && (
+                  {item.kind === 'video' && (
                     <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink/20">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/55 ring-1 ring-gold/50">
                         <span className="ml-px border-y-[4px] border-l-[7px] border-y-transparent border-l-gold" />
                       </span>
                     </span>
                   )}
-                  {loadingId === item.id && <MediaWait compact kind={item.kind} />}
                 </span>
                 <span className="album-caption">{item.kind === 'video' ? 'vídeo' : '\u00a0'}</span>
               </button>
@@ -452,8 +390,6 @@ function DriveVault({
               item={viewer}
               index={index}
               total={items.length}
-              loading={loadingId === viewer.id}
-              primed={primed}
               muted={muted}
               onMuted={onMuted}
               onClose={() => {
@@ -462,8 +398,8 @@ function DriveVault({
                 ensureUniverseTheme();
                 setIndex(null);
               }}
-              onPrev={() => void openAt(index - 1, 'anterior')}
-              onNext={() => void openAt(index + 1, 'siguiente')}
+              onPrev={() => openAt(index - 1, 'anterior')}
+              onNext={() => openAt(index + 1, 'siguiente')}
             />,
             stage,
           )
@@ -476,8 +412,6 @@ function MediaViewer({
   item,
   index,
   total,
-  loading,
-  primed,
   muted,
   onMuted,
   onClose,
@@ -487,8 +421,6 @@ function MediaViewer({
   item: DriveMedia;
   index: number;
   total: number;
-  loading: boolean;
-  primed: string[];
   muted: boolean;
   onMuted: (next: boolean) => void;
   onClose: () => void;
@@ -503,11 +435,13 @@ function MediaViewer({
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState({ s: 1, x: 0, y: 0 });
   const [ready, setReady] = useState(false);
+  const [usePlayer, setUsePlayer] = useState(false);
   const [notes, setNotes] = useState(loadNotes);
   const src = item.src;
   const preview = src && !src.includes('/preview') ? src : item.thumb;
-  const playable = Boolean(src && !src.includes('/preview'));
-  const waiting = item.kind === 'video' && (loading || !playable || !ready);
+  const playable = Boolean(src && !src.includes('/preview')) && !usePlayer;
+  const embed = item.kind === 'video' && (usePlayer || Boolean(src?.includes('/preview')));
+  const waiting = item.kind === 'video' && !embed && (!playable || !ready);
   const key = String(index);
   const liked = Boolean(notes.likes[key]);
   const zoomed = zoom.s > 1.04;
@@ -532,6 +466,7 @@ function MediaViewer({
 
   useEffect(() => {
     setReady(false);
+    setUsePlayer(false);
     putZoom({ s: 1, x: 0, y: 0 });
   }, [item.id, src]);
 
@@ -693,10 +628,10 @@ function MediaViewer({
       }}
     >
       <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
-        {item.kind === 'video' && src?.includes('/preview') && !loading ? (
+        {embed ? (
           <iframe
             title={item.name}
-            src={src}
+            src={src?.includes('/preview') ? src : drivePreviewSrc(item.id)}
             allow="autoplay; encrypted-media"
             allowFullScreen
             className="h-[88%] w-[min(100%,42rem)] border-0 bg-ink"
@@ -710,7 +645,7 @@ function MediaViewer({
                 autoPlay
                 muted={muted}
                 playsInline
-                preload="auto"
+                preload="metadata"
                 className={
                   ready
                     ? 'max-h-full max-w-full'
@@ -728,28 +663,20 @@ function MediaViewer({
                   duckUniverseTheme(false);
                   ensureUniverseTheme();
                 }}
+                onError={() => setUsePlayer(true)}
                 onVolumeChange={(e) => {
                   const el = e.currentTarget;
                   onMuted(el.muted || el.volume === 0);
                 }}
               />
             )}
-            {primed.map((url) => (
-              <video
-                key={url}
-                src={url}
-                preload="auto"
-                muted
-                playsInline
-                className="pointer-events-none absolute h-px w-px opacity-0"
-              />
-            ))}
             {waiting && <MediaWait kind="video" poster={item.thumb} />}
           </>
         ) : preview ? (
           <img
             src={preview}
             alt=""
+            referrerPolicy="no-referrer"
             className="max-h-full max-w-full object-contain will-change-transform"
             style={mediaStyle}
             onError={(e) => {
@@ -929,8 +856,8 @@ function MediaWait({
 
 function MediaThumb({ item, onNeedSrc }: { item: DriveMedia; onNeedSrc?: (item: DriveMedia) => void }) {
   const box = useRef<HTMLDivElement>(null);
-  const candidates = [item.src, item.thumb].filter(
-    (src): src is string => typeof src === 'string' && !src.includes('/preview'),
+  const candidates = (item.kind === 'video' ? [item.thumb] : [item.thumb, item.src]).filter(
+    (src): src is string => typeof src === 'string' && !src.includes('/preview') && !src.includes('alt=media'),
   );
   const [index, setIndex] = useState(0);
   const preview = candidates[index];
@@ -959,6 +886,8 @@ function MediaThumb({ item, onNeedSrc }: { item: DriveMedia; onNeedSrc?: (item: 
           alt=""
           referrerPolicy="no-referrer"
           className="aspect-square w-full object-cover"
+          loading="lazy"
+          decoding="async"
           onError={() => {
             setIndex((i) => i + 1);
             onNeedSrc?.(item);
