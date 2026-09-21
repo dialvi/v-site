@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
@@ -153,7 +153,7 @@ function DriveVault({
   const playableSrc = (item?: DriveMedia) =>
     Boolean(item?.src && !item.src.includes('/preview'));
 
-  const ensureSrc = (item: DriveMedia) => {
+  const ensureSrc = useCallback((item: DriveMedia) => {
     if (playableSrc(item)) return Promise.resolve(item.src);
     if (!token) return Promise.resolve(undefined);
     const cached = loads.current.get(item.id);
@@ -175,7 +175,7 @@ function DriveVault({
       });
     loads.current.set(item.id, pending);
     return pending;
-  };
+  }, [token]);
 
   const preloadAround = (at: number) => {
     if (!items.length) return;
@@ -340,7 +340,9 @@ function DriveVault({
       {error && <p className="mt-5 text-[14px] leading-relaxed text-dust">{error}</p>}
 
       {email && !error && items.length === 0 && !busy && (
-        <p className="mt-5 font-display text-[15px] italic text-paper/50">Este álbum todavía está vacío.</p>
+        <p className="mt-5 font-display text-[15px] italic text-paper/50">
+          Ha entrado bien, pero Drive no ha devuelto fotos. Comparte la carpeta con esta Gmail como lectora.
+        </p>
       )}
 
       {items.length > 0 && (
@@ -361,7 +363,7 @@ function DriveVault({
                 {i % 3 === 0 && <i className="album-tape album-tape-l" />}
                 {i % 3 === 2 && <i className="album-tape album-tape-r" />}
                 <span className="album-shot">
-                  <MediaThumb item={item} />
+                  <MediaThumb item={item} onNeedSrc={(entry) => void ensureSrc(entry).catch(() => undefined)} />
                   {item.kind === 'video' && loadingId !== item.id && (
                     <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-ink/20">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/55 ring-1 ring-gold/50">
@@ -859,27 +861,50 @@ function MediaWait({
   );
 }
 
-function MediaThumb({ item }: { item: DriveMedia }) {
-  const candidates = [item.thumb, item.src].filter(
+function MediaThumb({ item, onNeedSrc }: { item: DriveMedia; onNeedSrc?: (item: DriveMedia) => void }) {
+  const box = useRef<HTMLDivElement>(null);
+  const candidates = [item.src, item.thumb].filter(
     (src): src is string => typeof src === 'string' && !src.includes('/preview'),
   );
   const [index, setIndex] = useState(0);
   const preview = candidates[index];
 
+  useEffect(() => {
+    if (!onNeedSrc || item.src || item.kind !== 'image' || item.thumb) return;
+    const el = box.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        io.disconnect();
+        onNeedSrc(item);
+      },
+      { rootMargin: '240px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [item, onNeedSrc]);
+
   if (preview) {
     return (
-      <img
-        src={preview}
-        alt=""
-        referrerPolicy="no-referrer"
-        className="aspect-square w-full object-cover"
-        onError={() => setIndex((i) => i + 1)}
-      />
+      <div ref={box}>
+        <img
+          src={preview}
+          alt=""
+          referrerPolicy="no-referrer"
+          className="aspect-square w-full object-cover"
+          onError={() => {
+            setIndex((i) => i + 1);
+            onNeedSrc?.(item);
+          }}
+        />
+      </div>
     );
   }
 
   return (
     <div
+      ref={box}
       className="flex aspect-square w-full flex-col items-center justify-center px-3"
       style={{
         background: 'linear-gradient(180deg, #d8c7a8, #c4b08a)',
@@ -899,14 +924,16 @@ function messageFor(code: string) {
   if (code.startsWith('forbidden-email')) {
     const used = code.includes(':') ? code.slice(code.indexOf(':') + 1) : '';
     return used
-      ? `Has entrado con ${used}. Esa Gmail no está en la lista del secret.`
-      : 'Has entrado con una cuenta que no está en la lista. En Google elige la misma Gmail que en el PC.';
+      ? `Has entrado con ${used}. En el popup de Google elige valeria.cruzar20@gmail.com, no Hotmail ni otra cuenta.`
+      : 'Has entrado con una cuenta que no está en la lista. En Google elige esa Gmail, no Hotmail.';
   }
   if (code === 'forbidden-folder' || code === 'forbidden') {
-    return 'Google no deja leer la carpeta con esa cuenta. Compártela en Drive como lectora.';
+    return 'Esa Gmail ha entrado, pero Drive no le deja leer la carpeta. Compártela con ella como lectora y, en el engranaje de Compartir, deja que los lectores puedan descargar.';
+  }
+  if (code === 'access_denied' || code === 'denied') {
+    return 'Google ha bloqueado el login. En Cloud Console → pantalla de consentimiento OAuth → usuarios de prueba, añade esa Gmail.';
   }
   if (code === 'missing-folder') return 'No se encuentra la carpeta. Revisa el ID en los secrets.';
-  if (code === 'denied') return 'No se completó el acceso.';
   if (code === 'expired') return 'La sesión se ha caducado. Entra otra vez.';
   return 'No se han podido abrir los recuerdos.';
 }

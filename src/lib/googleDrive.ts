@@ -259,9 +259,10 @@ async function listChildren(accessToken: string, folderId: string) {
     const params = new URLSearchParams({
       q: `'${folderId}' in parents and trashed = false`,
       fields:
-        'nextPageToken,files(id,name,mimeType,thumbnailLink,shortcutDetails(targetId,targetMimeType))',
+        'nextPageToken,files(id,name,mimeType,thumbnailLink,hasThumbnail,shortcutDetails(targetId,targetMimeType))',
       pageSize: '50',
       supportsAllDrives: 'true',
+      includeItemsFromAllDrives: 'true',
     });
     if (pageToken) params.set('pageToken', pageToken);
     const data = await driveGet<{ nextPageToken?: string; files?: DriveFile[] }>(
