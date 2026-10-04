@@ -7,6 +7,7 @@ export type SectionId =
   | 'conclusion'
   | 'investigacion'
   | 'secretos'
+  | 'kit'
   | 'mapa';
 
 export type ViewId = 'intro' | 'map' | SectionId;
@@ -21,8 +22,9 @@ export const nodes = {
   lista: { x: 600, y: 1220 },
   investigacion: { x: 600, y: 1220 },
   mapa: { x: 1120, y: 1280 },
-  secretos: { x: 1580, y: 1500 },
-  conclusion: { x: 1920, y: 1960 },
+  kit: { x: 1480, y: 1480 },
+  secretos: { x: 1820, y: 1760 },
+  conclusion: { x: 2140, y: 2080 },
 };
 
 export const sectionNodes: {
@@ -38,6 +40,7 @@ export const sectionNodes: {
   { id: 'lista', ...nodes.lista, kicker: 'vale', label: 'La lista', glyph: '▴', delay: 160 },
   { id: 'mapa', ...nodes.mapa, kicker: 'sitios', label: 'Mapa', glyph: '⌖', delay: 240 },
   { id: 'archivo', ...nodes.archivo, kicker: '03', label: 'Archivo', glyph: '◎', delay: 320 },
+  { id: 'kit', ...nodes.kit, kicker: 'rx', label: 'Kit de la felicidad', glyph: '✚', delay: 400 },
   { id: 'secretos', ...nodes.secretos, kicker: 'campo', label: 'Confidencial', glyph: '◈', delay: 480 },
   { id: 'conclusion', ...nodes.conclusion, kicker: 'fin', label: 'La conclusión', glyph: '—', delay: 560 },
 ];
@@ -47,7 +50,8 @@ export const constellationLines: [keyof typeof nodes, keyof typeof nodes][] = [
   ['lista', 'mapa'],
   ['mapa', 'archivo'],
   ['archivo', 'historia'],
-  ['mapa', 'secretos'],
+  ['mapa', 'kit'],
+  ['kit', 'secretos'],
   ['secretos', 'conclusion'],
 ];
 
@@ -77,7 +81,7 @@ export function viewFor(id: ViewId, vw = 390, vh = 844): CameraState {
         scale: Math.min(1.22, (vw * 0.78) / 268),
       };
     case 'map':
-      return fit(420, 1980, 540, 2020, vw, vh, 0.92);
+      return fit(420, 2280, 540, 2220, vw, vh, 0.86);
     case 'historia':
       return { x: nodes.historia.x, y: nodes.historia.y, scale: Math.min(2.35, vw / 160) };
     case 'lista':
@@ -90,6 +94,8 @@ export function viewFor(id: ViewId, vw = 390, vh = 844): CameraState {
       return { x: nodes.investigacion.x, y: nodes.investigacion.y, scale: Math.min(2.2, vw / 165) };
     case 'secretos':
       return { x: nodes.secretos.x, y: nodes.secretos.y, scale: Math.min(2.2, vw / 165) };
+    case 'kit':
+      return { x: nodes.kit.x, y: nodes.kit.y, scale: Math.min(2.2, vw / 165) };
     case 'mapa':
       return { x: nodes.mapa.x, y: nodes.mapa.y, scale: Math.min(2.2, vw / 165) };
   }

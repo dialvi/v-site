@@ -8,13 +8,15 @@ export type Slot = {
   id: number;
   done?: Plan;
   options?: [Plan, Plan];
+  /** Índice ya elegido, guardado en el código. */
+  chosen?: number;
 };
 
 /** 24 casillas. Las 5 primeras ya están disfrutadas. */
 export const TOTAL_SLOTS = 24;
 export const PAST_DONE = 5;
 
-/** 20 sep 2026 cae la siguiente; después, una cada 15 días. */
+/** 20 sep 2026 cae la 6. La 7 cae el 4 oct 2026. Después, una cada 15 días. */
 export const UNLOCK_START = new Date('2026-09-20T00:00:00+02:00');
 export const UNLOCK_EVERY_DAYS = 15;
 
@@ -61,6 +63,7 @@ export const slots: Slot[] = [
   },
   {
     id: 6,
+    chosen: 1,
     options: [
       {
         title: 'Offroad por el río',
@@ -74,7 +77,22 @@ export const slots: Slot[] = [
       },
     ],
   },
-  ...Array.from({ length: TOTAL_SLOTS - PAST_DONE - 1 }, (_, i) => ({ id: i + 2 + PAST_DONE })),
+  {
+    id: 7,
+    options: [
+      {
+        title: 'Ballet: Tchaikovsky',
+        emoji: '🩰',
+        body: 'El domingo 11 de octubre.',
+      },
+      {
+        title: 'Un poco de flamenquito',
+        emoji: '💃',
+        body: 'Por Madrid.',
+      },
+    ],
+  },
+  ...Array.from({ length: TOTAL_SLOTS - PAST_DONE - 2 }, (_, i) => ({ id: i + PAST_DONE + 3 })),
 ];
 
 export function slotById(id: number) {
@@ -105,7 +123,28 @@ export function prettyDate(d: Date) {
 export function slotUnlockAt(id: number) {
   if (id <= PAST_DONE) return null;
   const step = id - PAST_DONE - 1;
-  return new Date(Date.UTC(2026, 8, 20 + step * UNLOCK_EVERY_DAYS, 10, 0, 0));
+  if (step <= 0) return new Date(Date.UTC(2026, 8, 20, 10, 0, 0));
+  return new Date(Date.UTC(2026, 9, 4 + (step - 1) * UNLOCK_EVERY_DAYS, 0, 0, 0));
+}
+
+/** Elección guardada en el código, o la que quedó en este teléfono. */
+export function pickedIndex(slot: Slot | undefined, choices: Record<string, number>) {
+  if (!slot || slot.done) return undefined;
+  if (slot.chosen != null) return slot.chosen;
+  const saved = choices[String(slot.id)];
+  return saved == null ? undefined : saved;
+}
+
+/** La estrella pendiente: el vale abierto más reciente que aún no tiene deseo. */
+export function wishSlotId(openUntil: number, choices: Record<string, number>) {
+  let latest: number | null = null;
+  for (let id = PAST_DONE + 1; id <= Math.min(openUntil, TOTAL_SLOTS); id++) {
+    const slot = slotById(id);
+    if (!slot || slot.done) continue;
+    if (pickedIndex(slot, choices) != null) continue;
+    latest = id;
+  }
+  return latest;
 }
 
 export function daysUntil(d: Date, now = new Date()) {
@@ -119,15 +158,6 @@ export function daysLabel(d: Date, now = new Date()) {
   if (n <= 0) return 'hoy';
   if (n === 1) return 'en 1 día';
   return `en ${n} días`;
-}
-
-function sameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-
-export function isUnlockDay(id: number, now = new Date()) {
-  const at = slotUnlockAt(id);
-  return Boolean(at && sameDay(at, now) && isSlotOpen(id, now));
 }
 
 const DRAFT_KEY = 'v-lista-options';

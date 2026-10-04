@@ -13,6 +13,7 @@ import { ArchivoLayer } from '@/features/archivo/ArchivoLayer';
 import { ConclusionLayer } from '@/features/conclusion/ConclusionLayer';
 import { InvestigacionLayer } from '@/features/investigacion/InvestigacionLayer';
 import { SecretosLayer } from '@/features/secretos/SecretosLayer';
+import { KitLayer } from '@/features/kit/KitLayer';
 import { MapaLayer } from '@/features/mapa/MapaLayer';
 import { WorldNode } from '@/features/universe/WorldNode';
 import {
@@ -34,6 +35,7 @@ function viewport() {
 function hopLabel(section: SectionId) {
   if (section === 'investigacion') return 'investigación';
   if (section === 'secretos') return 'confidencial';
+  if (section === 'kit') return 'kit';
   return section;
 }
 
@@ -220,6 +222,7 @@ export function Universe() {
         <InvestigacionLayer onBack={backFromLayer} backLabel={backLabel} focusId={jumpFocus} />
       )}
       {layer === 'secretos' && <SecretosLayer onBack={backFromLayer} />}
+      {layer === 'kit' && <KitLayer onBack={backFromLayer} />}
       {layer === 'mapa' && (
         <MapaLayer
           onBack={backFromLayer}

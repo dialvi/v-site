@@ -3,17 +3,18 @@ import {
   currentUnlock,
   daysLabel,
   isSlotOpen,
-  isUnlockDay,
   optionsFor,
+  pickedIndex,
   slotById,
   slotUnlockAt,
   TOTAL_SLOTS,
+  wishSlotId,
   type Plan,
   type Slot,
 } from '@/content/plans';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
-import { pingListaChoice } from '@/lib/watch';
+import { pingListaChoice, pingListaStar } from '@/lib/watch';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { useUniverseState } from '@/state/UniverseState';
 
@@ -84,7 +85,7 @@ export function ListaLayer({ onBack }: Props) {
 
   const planFor = (slot: Slot): { plan: Plan; enjoyed: boolean } | null => {
     if (slot.done) return { plan: slot.done, enjoyed: true };
-    const picked = save.choices[String(slot.id)];
+    const picked = pickedIndex(slot, save.choices);
     const gifts = giftsFor(slot);
     if (gifts && picked != null && gifts[picked]) {
       return { plan: gifts[picked], enjoyed: false };
@@ -282,22 +283,16 @@ function Field({
   const reduced = usePrefersReducedMotion();
   const play = !reduced;
   const cells = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i + 1), []);
-  const wishId =
-    cells.find(
-      (id) =>
-        isUnlockDay(id) &&
-        !slotById(id)?.done &&
-        choices[String(id)] == null,
-    ) ?? null;
+  const wishId = wishSlotId(openUntil, choices);
   const alreadyDown = wishId != null && readFallen().includes(wishId);
-  const fly = play && !alreadyDown;
+  const fly = Boolean(play && wishId != null && !alreadyDown);
   const lived = useMemo(
     () =>
       cells.filter(
         (id) =>
           id !== wishId &&
           (Boolean(slotById(id)?.done) ||
-            (id <= openUntil && choices[String(id)] != null)),
+            (id <= openUntil && pickedIndex(slotById(id), choices) != null)),
       ),
     [cells, choices, wishId, openUntil],
   );
@@ -313,6 +308,12 @@ function Field({
     const down = wishId != null && readFallen().includes(wishId);
     setWishLanded(!play || !wishId || down);
     setWhisper(down ? 'Toca la estrella.' : null);
+  }, [wishId, play]);
+
+  useEffect(() => {
+    if (!wishId || play || readFallen().includes(wishId)) return;
+    rememberFallen(wishId);
+    pingListaStar(wishId);
   }, [wishId, play]);
 
   return (
@@ -401,7 +402,9 @@ function Field({
             land={yearPos(wishId)}
             play={fly}
             onLanded={() => {
+              const first = !readFallen().includes(wishId);
               rememberFallen(wishId);
+              if (first) pingListaStar(wishId);
               setWishLanded(true);
               haptic('success');
               setWhisper('Toca la estrella.');
@@ -440,11 +443,11 @@ function Field({
             </div>
           </li>
         )}
-        {[...cells.filter((n) => n <= openUntil)].reverse().map((n, i) => {
+        {[...cells.filter((n) => n <= openUntil && (n !== wishId || wishLanded))].reverse().map((n, i) => {
             const slot = slotById(n);
             if (!slot) return null;
             const enjoyed = Boolean(slot.done);
-            const picked = choices[String(n)];
+            const picked = pickedIndex(slot, choices);
             const gifts = giftsFor(slot);
             const plan = slot.done ?? (gifts && picked != null ? gifts[picked] : undefined);
             const waiting = openUntil === n && !enjoyed && !plan && Boolean(slot.options);
@@ -543,6 +546,7 @@ function Choose({ slot, onChoose }: { slot: Slot; onChoose: (index: number) => v
                     {opt.emoji}
                   </p>
                   <p className="mt-2 font-display text-[2rem] italic leading-[1.05] text-paper">{opt.title}</p>
+                  <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-paper/70">{opt.body}</p>
                   {canPick && (
                     <p className="mt-3 text-[12px] uppercase tracking-[0.2em] text-gold/80">elegir este</p>
                   )}

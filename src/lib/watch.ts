@@ -15,6 +15,7 @@ function labels(section: string) {
   if (section === 'secretos') return 'Confidencial';
   if (section === 'conclusion') return 'Conclusión';
   if (section === 'investigacion') return 'Investigación';
+  if (section === 'kit') return 'Kit de la felicidad';
   return section;
 }
 
@@ -233,5 +234,13 @@ export function pingHistoriaMap(beatIndex: number, depth: number) {
 
 export function pingListaChoice(id: number, title: string) {
   ping(`Lista · casilla ${String(id).padStart(2, '0')} · eligió ${title}`);
+}
+
+export function pingListaStar(id: number) {
+  ping(`Lista · cayó la estrella · casilla ${String(id).padStart(2, '0')}`);
+}
+
+export function pingKit(title: string) {
+  ping(`Kit · ${title}`);
 }
 
