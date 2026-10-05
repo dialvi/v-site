@@ -1,22 +1,20 @@
 import { useState } from 'react';
-import { recipes, type Recipe } from '@/content/kit';
+import { notes, type Note } from '@/content/kit';
 import { BackChip } from '@/components/BackChip';
 import { haptic } from '@/lib/haptics';
-import { pingKit } from '@/lib/watch';
+import { pingKit, pingKitMessage } from '@/lib/watch';
 
 type Props = {
   onBack: () => void;
 };
 
-const TILTS = [-1.4, 1.1, -0.6];
-
 export function KitLayer({ onBack }: Props) {
-  const [open, setOpen] = useState<Recipe | null>(null);
+  const [open, setOpen] = useState<Note | null>(null);
 
-  const openRecipe = (recipe: Recipe) => {
+  const openNote = (note: Note) => {
     haptic('medium');
-    pingKit(recipe.title);
-    setOpen(recipe);
+    pingKit(note.title);
+    setOpen(note);
   };
 
   return (
@@ -27,23 +25,25 @@ export function KitLayer({ onBack }: Props) {
       </header>
 
       {open ? (
-        <RecipeSheet recipe={open} />
+        <NoteSheet note={open} />
       ) : (
         <div className="scroll-y min-h-0 flex-1 px-6 pb-[calc(var(--safe-bottom)+2.5rem)]">
-          <p className="text-[12px] uppercase tracking-[0.28em] text-gold/80">Farmacia</p>
+          <p className="text-[12px] uppercase tracking-[0.28em] text-gold/80">Notas</p>
           <h2 className="mt-3 font-display text-[2.35rem] italic leading-[1.05] text-paper">
             Kit de la felicidad
           </h2>
-          <ul className="mt-10 space-y-5">
-            {recipes.map((recipe, i) => (
-              <li key={recipe.id}>
+          <ul className="kit-grid mt-8">
+            {notes.map((note) => (
+              <li key={note.id}>
                 <button
                   type="button"
-                  onClick={() => openRecipe(recipe)}
-                  className="rx-slip w-full text-left"
-                  style={{ rotate: `${TILTS[i % TILTS.length]}deg` }}
+                  onClick={() => openNote(note)}
+                  className="kit-note h-full w-full text-left"
                 >
-                  <RecipeFace recipe={recipe} />
+                  <span className="kit-emoji" aria-hidden>
+                    {note.emoji}
+                  </span>
+                  <span className="kit-title">{note.title}</span>
                 </button>
               </li>
             ))}
@@ -54,29 +54,86 @@ export function KitLayer({ onBack }: Props) {
   );
 }
 
-function RecipeSheet({ recipe }: { recipe: Recipe }) {
+function NoteSheet({ note }: { note: Note }) {
   return (
     <div className="scroll-y min-h-0 flex-1 px-6 pb-[calc(var(--safe-bottom)+2.5rem)]">
-      <article className="rx-slip rx-slip-open mx-auto mt-6 w-full max-w-[22rem]">
-        <RecipeFace recipe={recipe} large />
+      <article className="kit-sheet mx-auto mt-4 w-full max-w-[24rem]">
+        {note.emoji ? (
+          <p className="kit-emoji kit-emoji-lg" aria-hidden>
+            {note.emoji}
+          </p>
+        ) : null}
+        <h2 className="kit-title kit-title-lg">{note.title}</h2>
+        {note.lines?.length ? (
+          <div className="kit-lines">
+            {note.lines.map((line) => (
+              <p key={line} className="kit-line">
+                {line}
+              </p>
+            ))}
+          </div>
+        ) : null}
+        {note.talk ? <Talk title={note.title} /> : null}
       </article>
     </div>
   );
 }
 
-function RecipeFace({ recipe, large = false }: { recipe: Recipe; large?: boolean }) {
+const PROMPTS = [
+  'me aburroooo',
+  'cuéntame algo',
+  'quiero un chiste malo',
+  'tengo un día regulero',
+  'necesito asistencia técnica',
+];
+
+function Talk({ title }: { title: string }) {
+  const [text, setText] = useState('');
+  const [sent, setSent] = useState<string | null>(null);
+
+  const send = (raw: string) => {
+    const message = raw.trim();
+    if (!message) return;
+    haptic('success');
+    pingKitMessage(title, message);
+    setText('');
+    setSent(message);
+  };
+
   return (
-    <>
-      <span className="rx-top">
-        <span className="rx-cross" aria-hidden>
-          ✚
-        </span>
-        <span>Farmacia</span>
-        <span className="rx-rp">Rp.</span>
-      </span>
-      <span className="rx-n">{recipe.n}</span>
-      <span className={`rx-title${large ? ' rx-title-lg' : ''}`}>{recipe.title}</span>
-      {large && recipe.body ? <span className="rx-body">{recipe.body}</span> : null}
-    </>
+    <form
+      className="kit-talk"
+      onSubmit={(e) => {
+        e.preventDefault();
+        send(text);
+      }}
+    >
+      <p className="kit-talk-label">Si quieres hablar y que te cuente un chiste malo →</p>
+      <div className="kit-talk-row">
+        <input
+          className="kit-input selectable"
+          value={text}
+          maxLength={400}
+          enterKeyHint="send"
+          placeholder="un mensaje"
+          aria-label="un mensaje"
+          onChange={(e) => {
+            setText(e.target.value);
+            if (sent) setSent(null);
+          }}
+        />
+        <button type="submit" className="kit-send">
+          Enviar
+        </button>
+      </div>
+      <div className="kit-chips">
+        {PROMPTS.map((prompt) => (
+          <button key={prompt} type="button" className="kit-chip" onClick={() => send(prompt)}>
+            {prompt}
+          </button>
+        ))}
+      </div>
+      {sent ? <p className="kit-sent">Enviado.</p> : null}
+    </form>
   );
 }

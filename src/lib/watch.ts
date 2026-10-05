@@ -244,3 +244,7 @@ export function pingKit(title: string) {
   ping(`Kit · ${title}`);
 }
 
+export function pingKitMessage(title: string, text: string) {
+  ping(`Kit · ${title} · ${text}`);
+}
+
