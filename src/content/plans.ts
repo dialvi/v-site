@@ -12,7 +12,7 @@ export type Slot = {
   chosen?: number;
 };
 
-/** 24 casillas. Las 5 primeras ya están disfrutadas. */
+/** 24 casillas. Las 5 primeras son anteriores al calendario de estrellas. */
 export const TOTAL_SLOTS = 24;
 export const PAST_DONE = 5;
 
@@ -79,20 +79,28 @@ export const slots: Slot[] = [
   },
   {
     id: 7,
+    done: {
+      title: 'Ballet: Tchaikovsky',
+      emoji: '🩰',
+      body: 'El domingo 11 de octubre.',
+    },
+  },
+  {
+    id: 8,
     options: [
       {
-        title: 'Ballet: Tchaikovsky',
-        emoji: '🩰',
-        body: 'El domingo 11 de octubre.',
+        title: 'Roadtrip de Otoño',
+        emoji: '🍂🚙',
+        body: 'Jeep, carreteras por bosques y desiertos. Zaragoza, y un día chill en lagos termales.',
       },
       {
-        title: 'Un poco de flamenquito',
-        emoji: '💃',
-        body: 'Por Madrid.',
+        title: 'Asia Gardens en Benidorm',
+        emoji: '🌺',
+        body: 'El Bali español.',
       },
     ],
   },
-  ...Array.from({ length: TOTAL_SLOTS - PAST_DONE - 2 }, (_, i) => ({ id: i + PAST_DONE + 3 })),
+  ...Array.from({ length: TOTAL_SLOTS - 8 }, (_, i) => ({ id: i + 9 })),
 ];
 
 export function slotById(id: number) {
